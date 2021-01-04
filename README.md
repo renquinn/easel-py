@@ -2,6 +2,14 @@
 
 A Canvas course management tool.
 
+## Installation
+
+To install easel, simply:
+
+```
+pip install easel-cli
+```
+
 ## Operations
 
 ### Login
@@ -81,7 +89,7 @@ easel push pages/lesson-1.yaml
 
 ## File Structure
 
-It is recommend to store component files in separate directories, named for
+It is recommended to store component files in separate directories, named for
 their component type (e.g., pages are stored in a directory called `pages`).
 This is not required but may be in the future once pulling updates from Canvas
 is enabled.

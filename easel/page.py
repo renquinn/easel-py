@@ -1,6 +1,6 @@
-import component
-import course
-import helpers
+from easel import component
+from easel import course
+from easel import helpers
 
 PAGES_PATH=course.COURSE_PATH+"/pages"
 

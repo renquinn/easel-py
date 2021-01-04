@@ -1,5 +1,5 @@
-import course
-import helpers
+from easel import course
+from easel import helpers
 
 class Component:
 

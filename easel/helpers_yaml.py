@@ -1,9 +1,9 @@
 import yaml
 
-import assignment
-import assignment_group
-import external_tool
-import page
+from easel import assignment
+from easel import assignment_group
+from easel import external_tool
+from easel import page
 
 # Define custom yaml tags
 yaml.add_constructor("!Assignment", assignment.constructor)

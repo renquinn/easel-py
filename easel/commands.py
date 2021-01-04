@@ -1,8 +1,8 @@
 import sys
 
-import course
-import helpers
-import helpers_yaml
+from easel import course
+from easel import helpers
+from easel import helpers_yaml
 
 def cmd_login(db, args):
     hostname = args.hostname

@@ -3,7 +3,7 @@ import urllib.parse
 import sys
 import tinydb
 
-import helpers
+from easel import helpers
 
 COURSES_PATH=helpers.API+"/courses"
 COURSE_PATH=COURSES_PATH+"/{}"

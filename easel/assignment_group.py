@@ -1,5 +1,5 @@
-import component
-import course
+from easel import component
+from easel import course
 
 ASSIGN_GROUP_PATH=course.COURSE_PATH+"/assignment_groups"
 

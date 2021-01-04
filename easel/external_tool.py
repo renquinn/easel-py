@@ -1,5 +1,5 @@
-import component
-import course
+from easel import component
+from easel import course
 
 EXT_TOOLS_PATH=course.COURSE_PATH+"/external_tools"
 
