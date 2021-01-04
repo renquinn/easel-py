@@ -1,0 +1,12 @@
+!Assignment
+name: Programming 10 - Conditionals
+published: true
+grading_type: points
+points_possible: 10
+submission_types:
+- external_tool
+external_tool_tag_attributes:
+  url: https://externaltool.net
+  new_tab: false
+allowed_attempts: -1
+due_at: "2021-03-05T23:59:59Z"

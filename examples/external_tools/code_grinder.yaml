@@ -1,0 +1,6 @@
+!ExternalTool
+name: CodeGrinder
+consumer_key: cs1410
+shared_secret: sharedsecret
+config_type: by_url
+config_url: https://codegrinder.net

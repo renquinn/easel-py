@@ -1,0 +1,15 @@
+!Assignment
+name: Sample Assignment
+published: true
+points_possible: 10
+submission_types:
+- online_upload
+allowed_extensions:
+- pdf
+allowed_attempts: -1
+grading_type: points
+due_at: "2021-03-12T23:59:59Z"
+description: '
+# Sample Assignment
+
+This assignment is to assign you assigned material.'

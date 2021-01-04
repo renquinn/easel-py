@@ -1,0 +1,15 @@
+!Page
+title: Lesson about stuff
+published: true
+body: |+
+  Lots of text about stuff to learn
+
+  ## Goals
+
+  - Use markdown here
+  - other stuff
+  - in a list
+
+  ## Other heading
+
+  [links too](https://example.net)
