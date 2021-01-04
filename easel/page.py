@@ -6,9 +6,9 @@ PAGES_PATH=course.COURSE_PATH+"/pages"
 
 class Page(component.Component):
 
-    def __init__(self, url=None, title=None, created_at=None, updated_at=None,
-            body=None, published=None, front_page=None, todo_date=None,
-            editing_roles=None, notify_of_update=None):
+    def __init__(self, url=None, title=None, body=None, published=None,
+            front_page=None, todo_date=None, editing_roles=None,
+            notify_of_update=None):
         component.Component.__init__(self, PAGES_PATH)
         self.url = url
         self.title = title

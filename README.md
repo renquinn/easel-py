@@ -101,6 +101,68 @@ body/description content, it should be included in markdown as part of the
 component's yaml configuration using a multiline string (see the `examples`
 directory for examples).
 
+## Recognized Component Fields
+
+### Assignments
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/assignments.html)
+
+- name
+- published
+- grading_type
+- points_possible
+- submission_types
+- allowed_extensions
+- external_tool_tag_attributes
+- allowed_attempts
+- due_at
+- unlock_at
+- lock_at
+- peer_reviews
+- automatic_peer_reviews
+- peer_reviews_assign_at
+- intra_group_peer_reviews
+- anonymous_submissions
+- omit_from_final_grade
+- use_rubric_for_grading
+- assignment_group_id
+- grade_group_students_individually
+- rubric
+- rubric_settings
+- position
+- description
+
+### Assignment Groups
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/assignment_groups.html)
+
+- name
+- position
+- group_weight
+
+### External Tools
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/external_tools.html)
+
+- name
+- consumer_key
+- shared_secret
+- config_type
+- config_url
+
+### Pages
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/pages.html)
+
+- url
+- title
+- body
+- published
+- front_page
+- todo_date
+- editing_roles
+- notify_of_update
+
 ## TODO
 
 I'll try to keep this list in order, with the items I'm prioritizing to get done
