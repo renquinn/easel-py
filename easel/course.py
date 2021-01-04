@@ -86,3 +86,11 @@ def pull(db, course_id):
     response["canvas_id"] = response["id"]
     return Course(response["id"], response["name"], response["course_code"],
             response["workflow_state"], response["syllabus_body"])
+
+def push_syllabus(db, courses=[]):
+    with open("syllabus.md") as f:
+        c = {"course": {"syllabus_body": helpers.md2html(f.read())}}
+    if not courses:
+        courses = find_all(db)
+    for course_ in courses:
+        helpers.put(COURSE_PATH.format(course_.canvas_id), c)

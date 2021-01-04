@@ -72,7 +72,7 @@ Works for the following components:
 
 - assignments
 - assignment groups
-- courses
+- course syllabus
 - external tools
 - pages
 - more to come!

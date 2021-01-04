@@ -80,5 +80,8 @@ def cmd_push(db, args):
         pass
     else:
         # push single
-        component = helpers_yaml.read(args.component_filepath)
-        component.push(db, args.course)
+        if args.component_filepath == "syllabus.md":
+            course.push_syllabus(db)
+        else:
+            component = helpers_yaml.read(args.component_filepath)
+            component.push(db, args.course)
