@@ -116,7 +116,7 @@ directory for examples).
 - allowed_extensions
 - external_tool_tag_attributes
 - allowed_attempts
-- due_at
+- due_at [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601)
 - unlock_at
 - lock_at
 - peer_reviews
