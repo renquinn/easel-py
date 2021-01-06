@@ -25,7 +25,8 @@ easel login https://school.instructure.com yourT0kenH3re
 ```
 
 Only needs to be run once per client machine. Records the Canvas url and token
-to be used for later.
+to be used for later.  Canvas tokens can be generated in
+"Account->Settings->+New Access Token".
 
 ### Init
 

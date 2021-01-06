@@ -86,7 +86,7 @@ class Config:
         f = open(config_file)
         c = json.loads(f.read())
         f.close()
-        self.hostname = c["host"]
+        self.hostname = c["hostname"]
         self.token = c["token"]
 
     def __repr__(self):
