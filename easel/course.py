@@ -18,6 +18,8 @@ class Course:
         self.code = code
         self.workflow_state = workflow_state
         self.syllabus = syllabus
+        if self.syllabus is None:
+            self.syllabus = ""
 
     def __repr__(self):
         return (f"Course(canvas_id={self.canvas_id}, name={self.name}, "
