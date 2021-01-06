@@ -9,7 +9,7 @@ class Component:
         self.path_args = path_args
 
     def __iter__(self):
-        fields = vars(self)
+        fields = vars(self).copy()
         fields.pop("path", None)
         fields.pop("path_args", None)
         keys = list(fields.keys())
@@ -22,5 +22,6 @@ class Component:
         if not courses:
             courses = course.find_all(db)
         for course_ in courses:
+            print(f"pushing {self} to {course_.name} ({course_.canvas_id})")
             path_args = [course_.canvas_id] + self.path_args
             helpers.post(self.path.format(*path_args), self)

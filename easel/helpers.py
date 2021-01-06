@@ -35,7 +35,10 @@ def setup_directories():
     dirs = ["assignment_groups", "assignments", "external_tools", "modules",
             "pages", "quizzes"]
     for d in dirs:
-        os.mkdir(d)
+        try:
+            os.mkdir(d)
+        except FileExistsError:
+            continue
 
 def get(path, params={}, decode=True):
     return do_request(path, params, "GET")
