@@ -191,6 +191,7 @@ sooner listed first.
       course, the canvas id will be different)
 - represent dates as time.Time
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
+    - help the user do daylight savings translations
 - add a progress bar for pushing and pulling
 - add a command to publish components rather than changing the published field
   in the file?
