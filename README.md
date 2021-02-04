@@ -184,6 +184,9 @@ sooner listed first.
   - First proposal: locally in markdown, convert to html when pushing. Don't
     edit content in Canvas (since we can't faithfully convert html to md).
     Pulling would not overwrite the component's contents.
+- add a new command which generates a component config file formatted and filled
+  with common options
+    - -i flag could prompt user to enter required options interactively
 - pull/push everything in transactions
     - use db as intermediate step, only go to Canvas if db transaction succeeded
     - workflow for pulling whether to overwrite, manually merge, or abort
