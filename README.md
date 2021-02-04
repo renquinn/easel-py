@@ -189,7 +189,12 @@ sooner listed first.
     - workflow for pulling whether to overwrite, manually merge, or abort
     - When pushing, update database with result (e.g., when pushing to a new
       course, the canvas id will be different)
-- represent dates as time.Time
+- manage datetimes for user
+    - relative semester/time specification
+        - week 1 day 2 start of class,
+        - week 4 day 1 end of class
+        - start of week 2 (first day of the week in the morning)
+        - end of week 3 (last day of the week at midnight)
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
     - help the user do daylight savings translations
 - add a progress bar for pushing and pulling
