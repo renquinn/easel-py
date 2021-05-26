@@ -28,12 +28,16 @@ class Component:
         table = db.table(self.table)
         table.upsert(c, self.gen_query())
 
-    def push(self, db, course_):
+    def push(self, db, course_, dry_run):
         found = self.find(db)
         if not found:
             # create
             path = self.create_path.format(course_.canvas_id)
-            resp = helpers.post(path, self)
+            resp = helpers.post(path, self, dry_run=dry_run)
+            if dry_run:
+                print("DRYRUN - grabbing the canvas_id and saving it on"
+                        " the component (assuming the request worked)")
+                return
             # TODO: what does resp look like? assuming for now that it's the
             # component as saved in canvas
             if 'course_id' in resp and 'id' in resp:
@@ -55,9 +59,12 @@ class Component:
                 return
             path = found.update_path.format(course_.canvas_id,
                     found.canvas_ids[course_.canvas_id])
-            resp = helpers.put(path, found)
+            resp = helpers.put(path, found, dry_run=dry_run)
             # TODO: check resp. only save updates if good?
-            found.save(db)
+            if dry_run:
+                print("DRYRUN - saving the component")
+            else:
+                found.save(db)
 
     def merge(self, other):
         # TODO: include some sort of confirmation prompt? or maybe that's what

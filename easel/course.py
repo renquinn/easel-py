@@ -89,7 +89,10 @@ def pull(db, course_id):
     return Course(response["id"], response["name"], response["course_code"],
             response["workflow_state"], response["syllabus_body"])
 
-def push_syllabus(db, course_id):
+def push_syllabus(db, course_id, dry_run):
     with open("syllabus.md") as f:
         c = {"course": {"syllabus_body": helpers.md2html(f.read())}}
-        helpers.put(COURSE_PATH.format(course_id), c)
+        if dry_run:
+            print(f"DRYRUN - pushing syllabus")
+        else:
+            helpers.put(COURSE_PATH.format(course_id), c)
