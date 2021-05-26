@@ -84,4 +84,8 @@ def cmd_push(db, args):
             course.push_syllabus(db)
         else:
             component = helpers_yaml.read(args.component_filepath)
-            component.push(db, args.course)
+            found = component.find(db)
+            if not found:
+                component.create(db, args.course)
+            else:
+                component.update(db, args.course)
