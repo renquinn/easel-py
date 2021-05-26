@@ -1,8 +1,11 @@
+import tinydb
+
 from easel import component
 from easel import course
 from easel import helpers
 
 ASSIGNMENTS_PATH=course.COURSE_PATH+"/assignments"
+ASSIGNMENT_PATH=ASSIGNMENTS_PATH+"/{}"
 
 class Assignment(component.Component):
 
@@ -15,8 +18,9 @@ class Assignment(component.Component):
             anonymous_submissions=None, omit_from_final_grade=None,
             use_rubric_for_grading=None, assignment_group_id=None,
             grade_group_students_individually=None, rubric=None,
-            rubric_settings=None, position=None, description=None):
-        component.Component.__init__(self, ASSIGNMENTS_PATH)
+            rubric_settings=None, position=None, description=None)
+        super().__init__(ASSIGNMENTS_PATH, ASSIGNMENT_PATH)
+        self.canvas_ids = {}
         self.name = name
         self.published = published
         self.grading_type = grading_type
@@ -45,8 +49,13 @@ class Assignment(component.Component):
         else:
             self.description = description
 
+    def gen_query(self):
+        return tinydb.Query().name == self.name
+
     def __iter__(self):
+        """For generating the request json"""
         fields = dict(super().__iter__())
+        del fields['canvas_ids']
         wrapped = {"assignment": fields}
         yield from wrapped.items()
 
