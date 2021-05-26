@@ -2,13 +2,14 @@ from easel import component
 from easel import course
 
 MODULES_PATH=course.COURSE_PATH+"/modules"
+MODULES_TABLE="modules"
 
 class Module(component.Component):
 
     def __init__(self, name=None, published=None, position=None,
             unlock_at=None, require_sequential_progress=None,
             prerequisite_module_ids=None, items=None):
-        component.Component.__init__(self, MODULES_PATH)
+        super().__init__(MODULES_PATH, MODULES_TABLE)
         self.name = name
         self.published = published
         self.position = position

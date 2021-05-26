@@ -6,6 +6,7 @@ from easel import helpers
 
 ASSIGNMENTS_PATH=course.COURSE_PATH+"/assignments"
 ASSIGNMENT_PATH=ASSIGNMENTS_PATH+"/{}"
+ASSIGNMENTS_TABLE="assignments"
 
 class Assignment(component.Component):
 
@@ -18,8 +19,8 @@ class Assignment(component.Component):
             anonymous_submissions=None, omit_from_final_grade=None,
             use_rubric_for_grading=None, assignment_group_id=None,
             grade_group_students_individually=None, rubric=None,
-            rubric_settings=None, position=None, description=None)
-        super().__init__(ASSIGNMENTS_PATH, ASSIGNMENT_PATH)
+            rubric_settings=None, position=None, description=None):
+        super().__init__(ASSIGNMENTS_PATH, ASSIGNMENT_PATH, ASSIGNMENTS_TABLE)
         self.canvas_ids = {}
         self.name = name
         self.published = published
