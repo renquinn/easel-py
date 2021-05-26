@@ -1,12 +1,14 @@
+import logging
 from easel import course
 from easel import helpers
 
 class Component:
 
-    def __init__(self, create_path, update_path):
+    def __init__(self, create_path, update_path, db_table=""):
         """assumes paths require course id"""
         self.create_path = create_path
         self.update_path = update_path
+        self.table = db_table
 
     def __iter__(self):
         fields = vars(self).copy()
@@ -18,13 +20,15 @@ class Component:
                 yield field
 
     def find(self, db):
-        return db.search(self.gen_query())
+        table = db.table(self.table)
+        return table.search(self.gen_query())
 
     def gen_query(self):
         raise NotImplementedError
 
     def save(self, db):
         c = dict(self)
+        c['canvas_ids'] = self.canvas_ids
         table = db.table(self.table)
         table.upsert(c, self.gen_query())
 
@@ -38,11 +42,8 @@ class Component:
                 print("DRYRUN - grabbing the canvas_id and saving it on"
                         " the component (assuming the request worked)")
                 return
-            # TODO: what does resp look like? assuming for now that it's the
-            # component as saved in canvas
-            if 'course_id' in resp and 'id' in resp:
-                self.canvas_ids[resp['course_id']] = resp['id']
-                # TODO: any other metadata we should grab from the response?
+            if 'id' in resp:
+                self.canvas_ids[course_.canvas_id] = resp['id']
                 self.save(db)
             else:
                 print("TODO: handle unexpected response when creating component")
@@ -50,15 +51,18 @@ class Component:
                 return
         else:
             # update
-            # TODO: found might be a list, but it should have 1 item in it if so
-            # changes in the md file (self) should be merged into the db record
+            if len(found) > 1:
+                print("TODO: handle too many results")
+                return
+            found = build(type(self).__name__, dict(found[0]))
             found.merge(self)
-            if course_.canvas_id not in found.canvas_ids:
-                print(f"failed to push {found} to course {course_.name}")
+            course_id = str(course_.canvas_id)
+            if course_id not in found.canvas_ids:
+                print(f"failed to push {found} to course {course_}")
                 print(f"no canvas id found for this component on that course")
                 return
-            path = found.update_path.format(course_.canvas_id,
-                    found.canvas_ids[course_.canvas_id])
+            path = found.update_path.format(course_id,
+                    found.canvas_ids[course_id])
             resp = helpers.put(path, found, dry_run=dry_run)
             # TODO: check resp. only save updates if good?
             if dry_run:
@@ -69,6 +73,12 @@ class Component:
     def merge(self, other):
         # TODO: include some sort of confirmation prompt? or maybe that's what
         # --dry-run is for (it could print the fields to be merged)?
-        for k, v in super(Component, other).__iter__:
+        for k, v in other.__iter__():
             # TODO: make sure we aren't overriding important metadata (e.g., canvas_ids)
+            logging.info(f"self.{k} = {getattr(self, k)} -> other.{k} = {v}")
             setattr(self, k, v)
+
+from easel import assignment_group
+def build(class_name, dictionary):
+    components = {"AssignmentGroup": assignment_group.AssignmentGroup}
+    return components[class_name](**dictionary)

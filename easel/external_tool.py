@@ -6,7 +6,7 @@ EXT_TOOLS_PATH=course.COURSE_PATH+"/external_tools"
 class ExternalTool(component.Component):
 
     def __init__(self, name, consumer_key, shared_secret, config_type, config_url):
-        component.Component.__init__(self, EXT_TOOLS_PATH)
+        super().__init__(EXT_TOOLS_PATH)
         self.name = name
         self.consumer_key = consumer_key
         self.shared_secret = shared_secret
