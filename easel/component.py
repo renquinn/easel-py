@@ -28,34 +28,40 @@ class Component:
         table = db.table(self.table)
         table.upsert(c, self.gen_query())
 
-    def push(self, db, path, courses, path_args=[]):
-        """path_args should be a list of arguments to format into the path
-            - e.g., a component's canvas id for updating the component"""
-        if not courses:
-            courses = course.find_all(db)
-        resps = []
-        for course_ in courses:
-            print(f"pushing {self} to {course_.name} ({course_.canvas_id})")
-            path_args = [course_.canvas_id] + path_args
-            resp = helpers.post(path.format(*path_args), self)
-            resps.append(resp)
-        return resps
-
-    def create(self, db, courses):
-        resps = self.push(db, self.create_path, courses)
-        ids = {}
-        for r in resps:
-            if 'course_id' in r and 'id' in r:
-                ids[r['course_id']] = r['id']
+    def push(self, db, course_):
+        found = self.find(db)
+        if not found:
+            # create
+            path = self.create_path.format(course_.canvas_id)
+            resp = helpers.post(path, self)
+            # TODO: what does resp look like? assuming for now that it's the
+            # component as saved in canvas
+            if 'course_id' in resp and 'id' in resp:
+                self.canvas_ids[resp['course_id']] = resp['id']
+                # TODO: any other metadata we should grab from the response?
+                self.save(db)
             else:
-                print("TODO: handle unexpected response")
-        self.canvas_ids = ids
-        self.save(db)
+                print("TODO: handle unexpected response when creating component")
+                print(resp)
+                return
+        else:
+            # update
+            # TODO: found might be a list, but it should have 1 item in it if so
+            # changes in the md file (self) should be merged into the db record
+            found.merge(self)
+            if course_.canvas_id not in found.canvas_ids:
+                print(f"failed to push {found} to course {course_.name}")
+                print(f"no canvas id found for this component on that course")
+                return
+            path = found.update_path.format(course_.canvas_id,
+                    found.canvas_ids[course_.canvas_id])
+            resp = helpers.put(path, found)
+            # TODO: check resp. only save updates if good?
+            found.save(db)
 
-    def update(self, db, courses):
-        # TODO: how to have path_args for each course (for using the canvas_id
-        # of the component for each course)? probably need to combine create
-        # and update back into single push method, or remove push method
-        # altogether with just create and update methods. Or reverse it: call
-        # push and then the push method decides to create or update?
-        self.push(db, self.update_path, courses, [self.canvas_id])
+    def merge(self, other):
+        # TODO: include some sort of confirmation prompt? or maybe that's what
+        # --dry-run is for (it could print the fields to be merged)?
+        for k, v in super(Component, other).__iter__:
+            # TODO: make sure we aren't overriding important metadata (e.g., canvas_ids)
+            setattr(self, k, v)

@@ -80,12 +80,13 @@ def cmd_push(db, args):
         pass
     else:
         # push single
-        if args.component_filepath == "syllabus.md":
-            course.push_syllabus(db)
-        else:
-            component = helpers_yaml.read(args.component_filepath)
-            found = component.find(db)
-            if not found:
-                component.create(db, args.course)
+        if not args.course:
+            args.course = course.find_all(db)
+        for course_ in args.course:
+            if args.component_filepath == "syllabus.md":
+                print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
+                course.push_syllabus(db, course_.canvas_id)
             else:
-                component.update(db, args.course)
+                component = helpers_yaml.read(args.component_filepath)
+                print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
+                component.push(db, course_)
