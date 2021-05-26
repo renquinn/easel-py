@@ -13,6 +13,9 @@ def main():
             "requests")
     parser.add_argument('--api-dump', action='store_true', help="dump API request "
             "and response data")
+    parser.add_argument('--dry-run', action='store_true', help="try executing "
+            "the command without actually making any write requests to canvas "
+            "or the db")
     parser.add_argument('--course', '-c', action='append', help="the canvas "
             "course(s) on which to perform the action")
 

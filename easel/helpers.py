@@ -1,8 +1,9 @@
 import json
 import logging
-import markdown
 import os
 from pathlib import Path
+
+import markdown
 import requests
 import tinydb
 
@@ -14,7 +15,7 @@ def md2html(mdtext):
     extensions = ['fenced_code', 'codehilite', 'tables']
     return markdown.markdown(mdtext, extensions=extensions)
 
-def write_config(hostname, token):
+def write_config(hostname, token, dry_run):
     home = Path.home()
     if home == "":
         raise ValueError("home directory is not set")
@@ -23,33 +24,39 @@ def write_config(hostname, token):
 
     config = {"hostname": hostname, "token": token}
     try:
-        with open(config_file, 'x') as f:
-            f.write(json.dumps(config)) # TODO: 0644
+        if dry_run:
+            print(f"DRYRUN - writing to file {config_file}")
+        else:
+            with open(config_file, 'x') as f:
+                f.write(json.dumps(config)) # TODO: 0644
     except FileExistsError:
         logging.error(f"Config file {config_file} exists")
 
 def load_db():
     return tinydb.TinyDB(".easeldb")
 
-def setup_directories():
+def setup_directories(dry_run):
     dirs = ["assignment_groups", "assignments", "external_tools", "modules",
             "pages", "quizzes"]
     for d in dirs:
         try:
-            os.mkdir(d)
+            if dry_run:
+                print(f"DRYRUN - mkdir {d}")
+            else:
+                os.mkdir(d)
         except FileExistsError:
             continue
 
-def get(path, params={}, decode=True):
-    return do_request(path, params, "GET")
+def get(path, params={}, decode=True, dry_run=False):
+    return do_request(path, params, "GET", dry_run=dry_run)
 
-def post(path, upload, params={}):
-    return do_request(path, params, "POST", upload)
+def post(path, upload, params={}, dry_run=False):
+    return do_request(path, params, "POST", upload, dry_run=dry_run)
 
-def put(path, upload, params={}):
-    return do_request(path, params, "PUT", upload)
+def put(path, upload, params={}, dry_run=False):
+    return do_request(path, params, "PUT", upload, dry_run=dry_run)
 
-def do_request(path, params, method, upload=None):
+def do_request(path, params, method, upload=None, dry_run=False):
     if not path.startswith("/"):
         raise ValueError('request path must start with /')
     if method not in ('GET', 'POST', 'PUT', 'DELETE'):
@@ -66,6 +73,10 @@ def do_request(path, params, method, upload=None):
     logging.debug(f"Params: {params}")
     logging.debug(f"Headers: {headers}")
     logging.debug("Data: {}".format(json.dumps(data, sort_keys=True, indent=4)))
+
+    if dry_run:
+        print("DRYRUN - making request (use --api or --api-dump for more details)")
+        return {}
 
     # apparently requests can't handle nested dictionaries in the data
     # parameter so I'm using the json param for it instead
