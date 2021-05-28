@@ -94,5 +94,6 @@ def cmd_push(db, args):
                 course.push_syllabus(db, course_.canvas_id, args.dry_run)
             else:
                 component = helpers_yaml.read(args.component_filepath)
+                component.filename = args.component_filepath
                 print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
                 component.push(db, course_, args.dry_run)

@@ -133,11 +133,16 @@ directory for examples).
 - position
 - description
 
+easel-specific fields
+
+- assignment_group (the name of the assignment group, will be resolved to
+  assignment_group_id)
+
 ### Assignment Groups
 
 [(field descriptions)](https://canvas.instructure.com/doc/api/assignment_groups.html)
 
-- name
+- name (must be unique)
 - position
 - group_weight
 
@@ -194,15 +199,29 @@ sooner listed first.
       course, the canvas id will be different)
 - manage datetimes for user
     - relative semester/time specification
-        - week 1 day 2 start of class,
-        - week 4 day 1 end of class
-        - start of week 2 (first day of the week in the morning)
-        - end of week 3 (last day of the week at midnight)
+        - e.g.,
+            - week 1 day 2 start of class,
+            - week 4 day 1 end of class
+            - start of week 2 (first day of the week in the morning)
+            - end of week 3 (last day of the week at midnight)
+        - instead of weeks use modules?
+            - define module with respect to 150-minute chunks (equivalent of one
+              week)
+            - gives us more flexibility for holidays
+            - user specifies dependency tree for modules in terms of
+              prerequisite modules
+            - easel schedules the modules based on semester dates
+            - deadlines are declared with respect to the module (which may carry
+              over to another week, depending on holidays, etc.
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
-    - help the user do daylight savings translations
+    - automate daylight savings translations
 - add a progress bar for pushing and pulling
 - add a command to publish components rather than changing the published field
   in the file?
+- by default, canvas courses do not enable weighted assignment groups
+    - allow users to update the course with this
+    - https://canvas.instructure.com/doc/api/all_resources.html#method.courses.update
+    - course[apply_assignment_group_weights]
 
 ### Thoughts
 

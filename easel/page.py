@@ -3,13 +3,17 @@ from easel import course
 from easel import helpers
 
 PAGES_PATH=course.COURSE_PATH+"/pages"
+PAGE_PATH=PAGES_PATH+"/{}" # page url
+TABLE="pages"
+WRAPPER="wiki_page"
 
 class Page(component.Component):
 
     def __init__(self, url=None, title=None, body=None, published=None,
             front_page=None, todo_date=None, editing_roles=None,
-            notify_of_update=None):
-        component.Component.__init__(self, PAGES_PATH)
+            notify_of_update=None, filename=""):
+        super().__init__(create_path=PAGES_PATH, update_path=PAGE_PATH,
+                db_table=TABLE, canvas_wrapper=WRAPPER, filename=filename)
         self.url = url
         self.title = title
         self.published = published
@@ -21,11 +25,6 @@ class Page(component.Component):
             self.body = helpers.md2html(body.strip())
         else:
             self.body = body
-
-    def __iter__(self):
-        fields = dict(super().__iter__())
-        wrapped = {"wiki_page": fields}
-        yield from wrapped.items()
 
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"

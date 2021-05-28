@@ -2,11 +2,15 @@ from easel import component
 from easel import course
 
 EXT_TOOLS_PATH=course.COURSE_PATH+"/external_tools"
+EXT_TOOL_PATH=EXT_TOOLS_PATH+"/{}"
+EXT_TOOLS_TABLE="external_tools"
 
 class ExternalTool(component.Component):
 
-    def __init__(self, name, consumer_key, shared_secret, config_type, config_url):
-        super().__init__(EXT_TOOLS_PATH)
+    def __init__(self, name="", consumer_key="", shared_secret="",
+            config_type="", config_url="", filename=""):
+        super().__init__(create_path=EXT_TOOLS_PATH, update_path=EXT_TOOL_PATH,
+                db_table=EXT_TOOLS_TABLE, filename=filename)
         self.name = name
         self.consumer_key = consumer_key
         self.shared_secret = shared_secret
