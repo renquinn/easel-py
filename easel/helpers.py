@@ -33,7 +33,7 @@ def write_config(hostname, token, dry_run):
         logging.error(f"Config file {config_file} exists")
 
 def load_db():
-    return tinydb.TinyDB(".easeldb")
+    return tinydb.TinyDB(".easeldb", sort_keys=True, indent=4, separators=(',', ': '))
 
 def setup_directories(dry_run):
     dirs = ["assignment_groups", "assignments", "external_tools", "modules",

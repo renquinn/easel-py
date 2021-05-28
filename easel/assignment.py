@@ -1,5 +1,7 @@
 import tinydb
 
+from easel import assignment_group
+from easel import canvas_id
 from easel import component
 from easel import course
 from easel import helpers
@@ -7,6 +9,7 @@ from easel import helpers
 ASSIGNMENTS_PATH=course.COURSE_PATH+"/assignments"
 ASSIGNMENT_PATH=ASSIGNMENTS_PATH+"/{}"
 ASSIGNMENTS_TABLE="assignments"
+WRAPPER="assignment"
 
 class Assignment(component.Component):
 
@@ -19,9 +22,11 @@ class Assignment(component.Component):
             anonymous_submissions=None, omit_from_final_grade=None,
             use_rubric_for_grading=None, assignment_group_id=None,
             grade_group_students_individually=None, rubric=None,
-            rubric_settings=None, position=None, description=None):
-        super().__init__(ASSIGNMENTS_PATH, ASSIGNMENT_PATH, ASSIGNMENTS_TABLE)
-        self.canvas_ids = {}
+            rubric_settings=None, position=None, description=None,
+            assignment_group=None, filename=""):
+        super().__init__(create_path=ASSIGNMENTS_PATH,
+                update_path=ASSIGNMENT_PATH, db_table=ASSIGNMENTS_TABLE,
+                canvas_wrapper=WRAPPER, filename=filename)
         self.name = name
         self.published = published
         self.grading_type = grading_type
@@ -49,16 +54,25 @@ class Assignment(component.Component):
             self.description = helpers.md2html(description.strip())
         else:
             self.description = description
+        # easel-managed attrs
+        # local variable has to be called assignment_group (clashes with module
+        # name) to match the yaml and Canvas response
+        self.assignment_group = assignment_group
 
-    def gen_query(self):
-        return tinydb.Query().name == self.name
+    def get_assignment_group_id(self, db, course_id):
+        if self.assignment_group:
+            ags = db.table(assignment_group.ASSIGN_GROUPS_TABLE)
+            results = ags.search(tinydb.Query().name == self.assignment_group)
+            if not results:
+                raise ValueError(f"failed to find AssignmentGroup called '{self.assignment_group}'")
+            # assumes assignment group names will be unique
+            fname = assignment_group.AssignmentGroup(**dict(results[0])).filename
+            cid = canvas_id.CanvasID(fname, course_id)
+            cid.find_id(db)
+            self.assignment_group_id = cid.canvas_id
 
-    def __iter__(self):
-        """For generating the request json"""
-        fields = dict(super().__iter__())
-        del fields['canvas_ids']
-        wrapped = {"assignment": fields}
-        yield from wrapped.items()
+    def preprocess(self, db, course_id):
+         self.get_assignment_group_id(db, course_id)
 
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"
