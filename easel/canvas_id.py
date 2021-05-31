@@ -25,3 +25,7 @@ class CanvasID:
     def save(self, db):
         table = db.table(TABLE)
         table.upsert(vars(self), self.gen_query())
+
+    def remove(self, db):
+        table = db.table(TABLE)
+        table.remove(self.gen_query())
