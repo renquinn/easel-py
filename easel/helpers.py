@@ -47,6 +47,9 @@ def setup_directories(dry_run):
         except FileExistsError:
             continue
 
+def delete(path, params={}, decode=True, dry_run=False):
+    return do_request(path, params, "DELETE", dry_run=dry_run)
+
 def get(path, params={}, decode=True, dry_run=False):
     return do_request(path, params, "GET", dry_run=dry_run)
 
@@ -84,7 +87,7 @@ def do_request(path, params, method, upload=None, dry_run=False):
             headers=headers)
 
     logging.debug(json.dumps(resp.json(), sort_keys=True, indent=4))
-    if resp.status_code not in [200, 201]:
+    if resp.status_code not in [200, 201, 404]:
         raise requests.HTTPError("Received unexpected status: {}".format(resp.status_code))
     return resp.json()
 

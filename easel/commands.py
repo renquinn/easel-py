@@ -72,6 +72,19 @@ def cmd_course_remove(db, course_search, dry_run):
         courses[0].remove(db)
         print("removed course", courses[0].name)
 
+def cmd_remove(db, args):
+    if not args.component_filepath:
+        # TODO: remove all?
+        pass
+    else:
+        if not args.course:
+            args.course = course.find_all(db)
+        for course_ in args.course:
+            component = helpers_yaml.read(args.component_filepath)
+            component.filename = args.component_filepath
+            print(f"removing {component} from {course_.name} ({course_.canvas_id})")
+            component.remove(db, course_, args.dry_run)
+
 def cmd_pull(db, args):
     if not args.component_filepath:
         # pull all

@@ -59,6 +59,39 @@ class Component:
     def preprocess(self, db, course_id):
         pass
 
+    def remove(self, db, course_, dry_run):
+        course_id = course_.canvas_id
+        cid = canvas_id.CanvasID(self.filename, course_id)
+        cid.find_id(db)
+        if not cid.canvas_id:
+            print(f"failed to delete {self} from course {course_}")
+            print("No canvas information found for the given component. If the"
+                    " component still exists in Canvas we may have lost track "
+                    "of it so you will have to manually delete it. Sorry!")
+            return
+
+        # TODO: confirm they want to delete it?
+        path = self.update_path.format(course_id, cid.canvas_id)
+        resp = helpers.delete(path, dry_run=dry_run)
+        err = False
+        if "errors" in resp:
+            print(f"canvas failed to delete the component {self}")
+            for error in resp['errors']:
+                if "does not exist" in error['message']:
+                    print("But that's ok because you were probably just "
+                            "removing the local canvas info for it.")
+                else:
+                    print("CANVAS ERROR:", error['message'])
+                    err = True
+        if err:
+            print("remove action aborted")
+            return
+
+        if dry_run:
+            print(f"DRYRUN - deleting the canvas relationship for {self}")
+        else:
+            cid.remove(db)
+
     def save(self, db):
         c = dict(self.gen_fields())
         c['filename'] = self.filename
@@ -68,43 +101,76 @@ class Component:
     def push(self, db, course_, dry_run):
         course_id = course_.canvas_id
         found = self.find(db)
-        if not found:
+        cid = canvas_id.CanvasID(self.filename, course_id)
+        cid.find_id(db)
+        # possible scenarios:
+        #   - record not found, no canvas id -> create
+        #   - record found, no canvas id -> yaml overrules record, right?
+        #       that's what it's doing now -> create
+        #   - record not found, canvas id found -> this one's weird.. should we
+        #       pull the canvas version and merge with the local version? right
+        #       now it just overwrites the canvas version -> update
+        #   - record found, canvas id found -> update
+        #   - TODO: what about if we have a canvas id but the component has
+        #       been deleted in canvas? maybe just delete the canvas id record
+        #       and try again? Since deleting components might be rare anyway,
+        #       for now we'll just inform the user and they can remove the
+        #       component themselves before proceeding. This will happen most
+        #       times that we delete an assignment group because it will delete
+        #       the assignments that belong to that group so we might want to
+        #       be proactive when we delete and then go delete the assignments,
+        #       but that requires even deeper tracking ahead of time.
+        # whether we create or update only depends on the canvas id but we
+        # might need to do other stuff depending on whether or not we have a db
+        # record?
+        if cid.canvas_id == "":
             # create
             path = self.create_path.format(course_id)
             self.preprocess(db, course_id)
             resp = helpers.post(path, self, dry_run=dry_run)
+
             if dry_run:
-                print("DRYRUN - grabbing the canvas_id and saving it on"
-                        " the component (assuming the request worked)")
+                print("DRYRUN - saving the canvas_id for the component "
+                        "(assuming the request worked)")
                 return
+
             if 'id' in resp:
                 self.save(db)
-                cid = canvas_id.CanvasID(self.filename, course_id, resp['id'])
+                cid.canvas_id = resp['id']
                 cid.save(db)
             elif 'url' in resp:
                 # pages use a url instead of an id but we can use them
                 # interchangably for this
                 self.save(db)
-                cid = canvas_id.CanvasID(self.filename, course_id, resp['url'])
+                cid.canvas_id = resp['url']
                 cid.save(db)
             else:
                 raise ValueError("TODO: handle unexpected response when creating component")
+
         else:
             # update
             if len(found) > 1:
                 raise ValueError("TODO: handle too many results, means the filename was not unique")
-            found = build(type(self).__name__, dict(found[0]))
-            found.merge(self)
-            cid = canvas_id.CanvasID(self.filename, course_id)
-            cid.find_id(db)
-            if cid.canvas_id == "":
-                print(f"failed to push {found} to course {course_}")
-                print(f"no canvas id found for this component on that course")
-                return
+
+            if not found:
+                found = self
+            else:
+                found = build(type(self).__name__, dict(found[0]))
+                found.merge(self)
+
             path = found.update_path.format(course_id, cid.canvas_id)
             found.preprocess(db, course_id)
             resp = helpers.put(path, found, dry_run=dry_run)
-            # TODO: check resp. only save if update worked?
+            if "errors" in resp:
+                print(f"failed to update the component {found}")
+                for error in resp['errors']:
+                    if "does not exist" in error['message']:
+                        print("The component was deleted in "
+                        "canvas without us knowing about it. You should remove"
+                        " the component here and then try pushing it again.")
+                    else:
+                        print("CANVAS ERROR:", error['message'])
+
             if dry_run:
                 print(f"DRYRUN - saving the component {found}")
             else:
