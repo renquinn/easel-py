@@ -58,6 +58,21 @@ easel course list
 
 List all Canvas courses that are tracked in the database.
 
+### Remove
+
+Remove a given component from the canvas course. This does not delete the yaml
+file or the local database entry for the component.
+
+```
+easel remove <component_filepath>
+```
+
+E.g.,
+
+```
+easel remove pages/lesson-1.yaml
+```
+
 ### Push
 
 ```
@@ -146,6 +161,9 @@ easel-specific fields
 - position
 - group_weight
 
+NOTE: when removing an assignment group, it will delete the assignments
+associated with that group as well.
+
 ### External Tools
 
 [(field descriptions)](https://canvas.instructure.com/doc/api/external_tools.html)
@@ -174,29 +192,13 @@ easel-specific fields
 I'll try to keep this list in order, with the items I'm prioritizing to get done
 sooner listed first.
 
-- I've been assuming user pulls or pushes from the course's root directory. Need
-  to search for the component dirs
-- multiple courses (i.e., sections).
-    - implicit iteration
-        - push: pushes to all courses, unless specified (e.g., -c 02)
-        - pull: pulls from all courses, checks for and reports any differences
-            - need to add a prompt for overwrite, manually merge, or abort
-            - need to track multiple canvas ids per component in the db. I'm
-              saving the canvas id on each component as if it would be the same
-              across all courses, but this is not the case.
-- Figure out the workflow for editing page/assignment content. Canvas uses html,
-  I'd prefer to express it in markdown.
-  - First proposal: locally in markdown, convert to html when pushing. Don't
-    edit content in Canvas (since we can't faithfully convert html to md).
-    Pulling would not overwrite the component's contents.
 - add a new command which generates a component config file formatted and filled
   with common options
     - -i flag could prompt user to enter required options interactively
-- pull/push everything in transactions
-    - use db as intermediate step, only go to Canvas if db transaction succeeded
-    - workflow for pulling whether to overwrite, manually merge, or abort
-    - When pushing, update database with result (e.g., when pushing to a new
-      course, the canvas id will be different)
+- by default, canvas courses do not enable weighted assignment groups
+    - allow users to update the course with this (or make it the default?)
+    - https://canvas.instructure.com/doc/api/all_resources.html#method.courses.update
+    - course[apply_assignment_group_weights]
 - manage datetimes for user
     - relative semester/time specification
         - e.g.,
@@ -215,13 +217,30 @@ sooner listed first.
               over to another week, depending on holidays, etc.
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
     - automate daylight savings translations
+- better logging
+- I've been assuming user pulls or pushes from the course's root directory. Need
+  to search for the component dirs
+- Figure out the workflow for editing page/assignment content. Canvas uses html,
+  I'd prefer to express it in markdown.
+  - First proposal: locally in markdown, convert to html when pushing. Don't
+    edit content in Canvas (since we can't faithfully convert html to md).
+    Pulling would not overwrite the component's contents.
+- multiple courses (i.e., sections).
+    - implicit iteration
+        - push: pushes to all courses, unless specified (e.g., -c 02)
+        - pull: pulls from all courses, checks for and reports any differences
+            - need to add a prompt for overwrite, manually merge, or abort
+            - need to track multiple canvas ids per component in the db. I'm
+              saving the canvas id on each component as if it would be the same
+              across all courses, but this is not the case.
+- pull/push everything in transactions
+    - use db as intermediate step, only go to Canvas if db transaction succeeded
+    - workflow for pulling whether to overwrite, manually merge, or abort
+    - When pushing, update database with result (e.g., when pushing to a new
+      course, the canvas id will be different)
 - add a progress bar for pushing and pulling
 - add a command to publish components rather than changing the published field
   in the file?
-- by default, canvas courses do not enable weighted assignment groups
-    - allow users to update the course with this
-    - https://canvas.instructure.com/doc/api/all_resources.html#method.courses.update
-    - course[apply_assignment_group_weights]
 
 ### Thoughts
 
