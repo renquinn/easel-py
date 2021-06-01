@@ -21,6 +21,10 @@ class Component:
     - add the component's class to the build function at the bottom of this file
     - [optional] a preprocess() method to resolve any easel-managed info to
       canvas info (e.g., assignment group name to canvas id)
+    - [optional] a postprocess() method to resolve any easel-managed info to
+      canvas info, but those that require the canvas item to be create first
+      (e.g., adding module items to a module without keeping track of a
+      separate file for module items)
     - [optional] a repr method is nice
     """
 
@@ -49,14 +53,30 @@ class Component:
             if field[0] not in ignore_these and field[1] is not None:
                 yield field
 
+    def format_create_path(self, db, *path_args):
+        """default: 1 arg -> course_id"""
+        return self.create_path.format(*path_args)
+
+    def format_update_path(self, db, *path_args):
+        """default: 2 args -> course_id, component_id"""
+        return self.update_path.format(*path_args)
+
     def find(self, db):
         table = db.table(self.table)
         return table.search(self.gen_query())
 
+    def get_canvas_id(self, db, course_id):
+        cid = canvas_id.CanvasID(self.filename, course_id)
+        cid.find_id(db)
+        return cid.canvas_id
+
     def gen_query(self):
         return tinydb.Query().filename == self.filename
 
-    def preprocess(self, db, course_id):
+    def preprocess(self, db, course_id, dry_run):
+        pass
+
+    def postprocess(self, db, course_id, dry_run):
         pass
 
     def remove(self, db, course_, dry_run):
@@ -71,7 +91,7 @@ class Component:
             return
 
         # TODO: confirm they want to delete it?
-        path = self.update_path.format(course_id, cid.canvas_id)
+        path = self.format_update_path(db, course_id, cid.canvas_id)
         resp = helpers.delete(path, dry_run=dry_run)
         err = False
         if "errors" in resp:
@@ -84,7 +104,8 @@ class Component:
                     print("CANVAS ERROR:", error['message'])
                     err = True
         if err:
-            print("remove action aborted")
+            print("local remove action aborted")
+            print("Canvas may or may not have successfully deleted the component")
             return
 
         if dry_run:
@@ -98,11 +119,23 @@ class Component:
         table = db.table(self.table)
         table.upsert(c, self.gen_query())
 
-    def push(self, db, course_, dry_run):
-        course_id = course_.canvas_id
+    def push(self, db, course_id, dry_run, parent_component=None):
+        """
+        push the component to the given canvas course
+
+        The parent_component is used for the more complex scenarios when canvas
+        nests components inside of others (e.g., ModuleItems inside of
+        Modules). Usually in these cases, the child component's API endpoint
+        paths will be an extension of the parent's path, so it parent_component
+        allows us to extend the default behavior. In these cases, push() will
+        be called in a different location than the typical execution path in
+        commands.py. However, this other location should mimic that typical
+        behavior (see preprocess() in module.py).
+        """
         found = self.find(db)
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
+
         # possible scenarios:
         #   - record not found, no canvas id -> create
         #   - record found, no canvas id -> yaml overrules record, right?
@@ -115,18 +148,20 @@ class Component:
         #       been deleted in canvas? maybe just delete the canvas id record
         #       and try again? Since deleting components might be rare anyway,
         #       for now we'll just inform the user and they can remove the
-        #       component themselves before proceeding. This will happen most
-        #       times that we delete an assignment group because it will delete
-        #       the assignments that belong to that group so we might want to
-        #       be proactive when we delete and then go delete the assignments,
-        #       but that requires even deeper tracking ahead of time.
-        # whether we create or update only depends on the canvas id but we
-        # might need to do other stuff depending on whether or not we have a db
-        # record?
+        #       component themselves before proceeding. This will mainly happen
+        #       when we delete a component that tracks children (e.g., an
+        #       assignment group because it will delete the
+        #       assignments that belong to that group, a module with its items)
+        #       so we might want to be proactive when we delete and then go
+        #       delete the assignments, but that requires even deeper tracking
+        #       ahead of time.
+        # conclusion: whether we create or update only depends on the canvas id
+        # but later on we might end up needing to do other stuff depending on
+        # whether or not we have a db record?
         if cid.canvas_id == "":
             # create
-            path = self.create_path.format(course_id)
-            self.preprocess(db, course_id)
+            path = self.format_create_path(db, course_id, parent_component)
+            self.preprocess(db, course_id, dry_run)
             resp = helpers.post(path, self, dry_run=dry_run)
 
             if dry_run:
@@ -147,19 +182,20 @@ class Component:
             else:
                 raise ValueError("TODO: handle unexpected response when creating component")
 
+            self.postprocess(db, course_id, dry_run)
+
         else:
             # update
-            if len(found) > 1:
-                raise ValueError("TODO: handle too many results, means the filename was not unique")
-
             if not found:
                 found = self
+            elif len(found) > 1:
+                    raise ValueError("TODO: handle too many results, means the filename was not unique")
             else:
                 found = build(type(self).__name__, dict(found[0]))
                 found.merge(self)
 
-            path = found.update_path.format(course_id, cid.canvas_id)
-            found.preprocess(db, course_id)
+            path = self.format_update_path(db, course_id, cid.canvas_id, parent_component)
+            found.preprocess(db, course_id, dry_run)
             resp = helpers.put(path, found, dry_run=dry_run)
             if "errors" in resp:
                 print(f"failed to update the component {found}")
@@ -176,6 +212,8 @@ class Component:
             else:
                 found.save(db)
 
+            found.postprocess(db, course_id, dry_run)
+
     def merge(self, other):
         # TODO: include some sort of confirmation prompt? or maybe that's what
         # --dry-run is for (it could print the fields to be merged)?
@@ -189,12 +227,14 @@ def build(class_name, dictionary):
     from easel import assignment
     from easel import external_tool
     from easel import module
+    from easel import module_item
     from easel import page
     components = {
             "Assignment": assignment.Assignment,
             "AssignmentGroup": assignment_group.AssignmentGroup,
             "ExternalTool": external_tool.ExternalTool,
             "Module": module.Module,
+            "ModuleItem": module_item.ModuleItem,
             "Page": page.Page,
             }
     return components[class_name](**dictionary)

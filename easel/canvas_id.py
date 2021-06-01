@@ -9,6 +9,9 @@ class CanvasID:
         self.course_id = course_id
         self.canvas_id = canvas_id
 
+    def __repr__(self):
+        return f"CanvasID(filename={self.filename}, course_id={self.course_id}, canvas_id={self.canvas_id})"
+
     def find_id(self, db):
         """search for a component's canvas id using its filename and course,
         None if not found"""
