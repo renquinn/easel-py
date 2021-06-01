@@ -217,6 +217,18 @@ sooner listed first.
               over to another week, depending on holidays, etc.
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
     - automate daylight savings translations
+- pushing files
+- test other types of module items
+    - working:
+        - pages
+        - assignments
+    - need testing:
+        - File
+        - Discussion
+        - Quiz
+        - SubHeader
+        - ExternalUrl
+        - ExternalTool
 - better logging
 - I've been assuming user pulls or pushes from the course's root directory. Need
   to search for the component dirs
