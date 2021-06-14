@@ -253,6 +253,8 @@ sooner listed first.
 - add a progress bar for pushing and pulling
 - add a command to publish components rather than changing the published field
   in the file?
+- GUI?
+    - https://github.com/willmcgugan/rich
 
 ### Thoughts
 
@@ -274,3 +276,18 @@ sooner listed first.
     - one file per question category (e.g., all requrements engineering
       questions) this is probably the best user-focused approach, but harder to
       implement?
+- Question groups only work with question banks. We can't create question banks
+  via the api. What other option do we have? Ideally we create a question group
+  directly with the questions that should go in it. E.g.,
+  ```
+  - question_name: g1
+    question_type: group
+    questions:
+      - quiz_questions/functions.yaml
+      - quiz_questions/functions.yaml
+      - quiz_questions/functions.yaml
+  ```
+  The preprocessor would intercept the `question_type` (it's invalid anyway) and
+  make the api call to create the group, passing in the questions. So remember
+  that in case they open up question groups to work by specifying a question
+  directly.

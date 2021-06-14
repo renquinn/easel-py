@@ -169,18 +169,21 @@ class Component:
                         "(assuming the request worked)")
                 return
 
-            if 'id' in resp:
-                self.save(db)
-                cid.canvas_id = resp['id']
-                cid.save(db)
-            elif 'url' in resp:
-                # pages use a url instead of an id but we can use them
-                # interchangably for this
-                self.save(db)
-                cid.canvas_id = resp['url']
-                cid.save(db)
-            else:
-                raise ValueError("TODO: handle unexpected response when creating component")
+            if self.filename:
+                # only save the canvas id if we have a filename because we
+                # don't want to save some components (e.g., quiz questions)
+                if 'id' in resp:
+                    self.save(db)
+                    cid.canvas_id = resp['id']
+                    cid.save(db)
+                elif 'url' in resp:
+                    # pages use a url instead of an id but we can use them
+                    # interchangably for this
+                    self.save(db)
+                    cid.canvas_id = resp['url']
+                    cid.save(db)
+                else:
+                    raise ValueError("TODO: handle unexpected response when creating component")
 
             self.postprocess(db, course_id, dry_run)
 
@@ -229,6 +232,7 @@ def build(class_name, dictionary):
     from easel import module
     from easel import module_item
     from easel import page
+    from easel import quiz
     components = {
             "Assignment": assignment.Assignment,
             "AssignmentGroup": assignment_group.AssignmentGroup,
@@ -236,5 +240,6 @@ def build(class_name, dictionary):
             "Module": module.Module,
             "ModuleItem": module_item.ModuleItem,
             "Page": page.Page,
+            "Quiz": quiz.Quiz,
             }
     return components[class_name](**dictionary)
