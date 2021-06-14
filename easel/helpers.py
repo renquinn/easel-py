@@ -86,10 +86,19 @@ def do_request(path, params, method, upload=None, dry_run=False):
     resp = requests.request(method, req_url, params=params, json=data,
             headers=headers)
 
-    logging.debug(json.dumps(resp.json(), sort_keys=True, indent=4))
-    if resp.status_code not in [200, 201, 404]:
+    r = ""
+    if resp.text:
+        r = resp.json()
+
+    logging.debug(json.dumps(r, sort_keys=True, indent=4))
+    if resp.status_code == 500:
+        logging.error("Canvas did not like that request. Perhaps the component"
+                " you are trying to push was incorrectly formatted. A common "
+                "mistake is having a typo in the yaml. It might help to "
+                "inspect the request parameters with the --api-dump flag.")
+    if resp.status_code not in [200, 201, 204, 400, 404, 500]:
         raise requests.HTTPError("Received unexpected status: {}".format(resp.status_code))
-    return resp.json()
+    return r
 
 class Config:
 
