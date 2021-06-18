@@ -20,7 +20,7 @@ class QuizQuestion(component.Component):
             quiz_group_id=None, question_type=None, position=None,
             points_possible=None, correct_comments=None,
             incorrect_comments=None, neutral_comments=None,
-            text_after_answers=None, answers=[], filename=""):
+            text_after_answers=None, answers=[], id=None, filename=""):
         super().__init__(create_path=QUIZ_QUESTIONS_PATH,
                 update_path=QUIZ_QUESTION_PATH, db_table=QUIZ_QUESTIONS_TABLE,
                 canvas_wrapper=WRAPPER, filename=filename)
@@ -29,6 +29,7 @@ class QuizQuestion(component.Component):
             self.question_text = helpers.md2html(question_text.strip())
         else:
             self.question_text = None
+        self.id = id
         self.quiz_group_id=quiz_group_id
         self.question_type=question_type
         self.position=position
@@ -42,8 +43,9 @@ class QuizQuestion(component.Component):
             answer["answer_text"] = answer.get("answer_text", "").replace('\n', ' ').strip()
 
     def __eq__(self, other):
-        return (self.question_name == other.question_name and
-                self.question_text == self.question_text)
+        return (self.id == other.id and
+                self.question_name == other.question_name and
+                self.question_text == other.question_text)
 
     def __iter__(self):
         # canvas expects a list of answers to be in the form of an answers
@@ -58,7 +60,7 @@ class QuizQuestion(component.Component):
             yield (key, question[key])
 
     def __repr__(self):
-        return f"QuizQuestion(question_name={self.question_name}, " \
+        return f"QuizQuestion(id={self.id}, question_name={self.question_name}, " \
                 f"question_type={self.question_type}, " \
                 f"points_possible={self.points_possible}, "\
                 f"answers_count={len(self.answers)})"
