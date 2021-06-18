@@ -1,3 +1,4 @@
+import logging
 import random
 import tinydb
 
@@ -124,6 +125,7 @@ class Quiz(component.Component):
     def __repr__(self):
         return f"Quiz(title={self.title}, published={self.published})"
 
+QUESTION_ID_KEY='id'
 def build_questions(quiz_questions):
     questions = []
     for qq in quiz_questions:
@@ -136,19 +138,28 @@ def build_questions(quiz_questions):
             if 'bank' in qq:
                 # assume they are referring to a quiz_questions file
                 bank_questions = load_questions_file(qq['bank'])
-                if 'i' in qq:
+                if QUESTION_ID_KEY in qq:
                     # grab question at that position in the file
                     # TODO: make sure we haven't already picked that
                     # question. for now maybe just encourage users to order
                     # the questions so that the randomized ones are last
-                    i = qq['i']
+                    qid = qq[QUESTION_ID_KEY]
+                    found = None
                     for q in bank_questions:
-                        if i < len(bank_questions):
-                            questions.append(bank_questions[i])
-                            break
-                        else:
-                            raise ValueError(f"Invalid i for {qq}: bank "
-                                    "does not have enough questions")
+                        if q.id and q.id == qid:
+                            if found:
+                                logging.warn("Already found a question with "
+                                        f"the id {qid}. The ids in a file "
+                                        "should be unique. For now we'll use "
+                                        "the question with this id found last "
+                                        "in the list.")
+                            q.id = None
+                            found = q
+                    if found:
+                        questions.append(found)
+                    else:
+                        logging.error("Failed to find a question with the id "
+                                f"{qid} in the bank {qq['bank']}")
                 else:
                     # they didn't specify a particular question so pick one
                     # at random from the file but make sure we haven't yet
