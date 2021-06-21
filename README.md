@@ -4,11 +4,22 @@ A Canvas course management tool.
 
 ## Installation
 
-To install easel, simply:
-
 ```
 pip install easel-cli
 ```
+
+## Usage
+
+When connected to a Canvas course, easel will read in a yaml file and create the
+corresponding component in Canvas on that course. Currently, easel assumes you
+will run its command from the root of your course directory (where the component
+subdirectories are located). This is where easel will initialize its database:
+`.easeldb`.
+
+First, tell easel about your Canvas instance. Then, initialize easel and add a
+course or courses. From there, you can create yaml files describing your course
+content and push them to your course. For each of these operations, refer to
+their detailed description and usage below.
 
 ## Operations
 
@@ -25,7 +36,7 @@ easel login https://school.instructure.com yourT0kenH3re
 ```
 
 Only needs to be run once per client machine. Records the Canvas url and token
-to be used for later.  Canvas tokens can be generated in
+to be used later. Canvas tokens can be generated in
 "Account->Settings->+New Access Token".
 
 ### Init
@@ -34,8 +45,12 @@ to be used for later.  Canvas tokens can be generated in
 easel init
 ```
 
-Initializes the easel database in the current directory. Run this one time per
-course directory.
+Run this one time per course directory. It will initialize the easel database in
+the current directory. It will also create subdirectories for each Canvas
+component type that easel supports.
+
+At this time, easel requires components to be organized by directory but this is
+hopefully a temporary restriction.
 
 ### Course
 
@@ -61,7 +76,8 @@ List all Canvas courses that are tracked in the database.
 ### Remove
 
 Remove a given component from the canvas course. This does not delete the yaml
-file or the local database entry for the component.
+file or the local database entry for the component. But it will remove the
+database record which tracks that component in Canvas (i.e., it's Canvas ID).
 
 ```
 easel remove <component_filepath>
@@ -81,8 +97,8 @@ easel push
 
 Reads and pushes a single item of the given component type to the configured
 courses. A push reads the information of each component stored locally and for
-each one, makes a PUT request to Canvas. For now it only creates new components
-on the Canvas course. The ability to update them will come in the future.
+each one, makes a POST or PUT request to Canvas, depending on whether you are
+creating or updating the component in the Canvas course.
 
 Works for the following components:
 
@@ -90,8 +106,9 @@ Works for the following components:
 - assignment groups
 - course syllabus
 - external tools
+- modules
 - pages
-- more to come!
+- quizzes
 
 ```
 easel push [component_filepath]
@@ -105,17 +122,20 @@ easel push pages/lesson-1.yaml
 
 ## File Structure
 
-It is recommended to store component files in separate directories, named for
-their component type (e.g., pages are stored in a directory called `pages`).
-This is not required but may be in the future once pulling updates from Canvas
-is enabled.
+For now it is required to store component files in separate directories, named
+for their component type (e.g., store definition files for pages in a directory
+called `pages`). This requirement may be removed in the future.
 
-Each individual component is defined by a single file.
+Each individual component is defined by a single file using yaml. When a
+component has some associated body/description content, it should be included in
+markdown as part of the component's yaml configuration using a multiline string
+(see the `examples` directory for examples).
 
-Components are defined using yaml. When a component has some associated
-body/description content, it should be included in markdown as part of the
-component's yaml configuration using a multiline string (see the `examples`
-directory for examples).
+## Dates
+
+When specifying dates (e.g., due_at, unlock_at, lock_at),
+[ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) should be used. This
+is temporary until I can build out an internal date management system.
 
 ## Recognized Component Fields
 
@@ -131,7 +151,7 @@ directory for examples).
 - allowed_extensions
 - external_tool_tag_attributes
 - allowed_attempts
-- due_at [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601)
+- due_at
 - unlock_at
 - lock_at
 - peer_reviews
@@ -174,6 +194,29 @@ associated with that group as well.
 - config_type
 - config_url
 
+### Modules
+
+[(module field descriptions)](https://canvas.instructure.com/doc/api/modules.html)
+
+- name
+- published
+- position
+- unlock_at
+- require_sequential_progress
+- prerequisite_module_ids
+- items (a list of module item objects, see below)
+
+Each module item can have the following fields:
+
+- item
+    - this is a local filename that represents the yaml file for the item you
+      want to add to the module
+    - if you don't specify any other option for this item, you can just use the
+      name of the file as a string without creating a yaml object for it
+    - only Pages and Assignments work for now (see TODO section below)
+- indent
+- new_tab
+
 ### Pages
 
 [(field descriptions)](https://canvas.instructure.com/doc/api/pages.html)
@@ -187,6 +230,73 @@ associated with that group as well.
 - editing_roles
 - notify_of_update
 
+### Quizzes
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/quizzes.html)
+
+
+- title
+- published
+- description
+- assignment_group (the name of the assignment group)
+- points_possible
+- allowed_attempts
+- due_at
+- unlock_at
+- lock_at
+- quiz_type
+- time_limit
+- shuffle_answers
+- hide_results
+- show_correct_answers
+- show_correct_answers_last_attempt
+- show_correct_answers_at
+- hide_correct_answers_at
+- scoring_policy
+- one_question_at_a_time
+- cant_go_back
+- access_code
+- ip_filter
+- one_time_results
+- only_visible_to_overrides
+- anonymous_submissions
+- description
+- quiz_questions (a list of quiz_question objects, see below)
+
+Each quiz question can have the following fields:
+
+[(field descriptions)](https://canvas.instructure.com/doc/api/quiz_questions.html)
+
+- question_name
+- question_type
+- question_text
+- points_possible
+- position
+- correct_comments
+- incorrect_comments
+- neutral_comments
+- matching_answer_incorrect_matches
+- text_after_answers
+- answers (a list of answer objects, see below)
+
+Each quiz question answer can have the following fields:
+
+- answer_text
+- answer_weight
+- blank_id (for fill in multiple blanks or multiple dropdowns question questions)
+- answer_match_left (for matching questions)
+- answer_match_right (for matching questions)
+- numerical_answer_type (for numerical questions), possible values:
+    - exact_answer
+    - range_answer
+    - precision_answer
+- answer_exact (for numerical questions)
+- answer_error_margin (for numerical questions)
+- answer_range_start (for numerical questions)
+- answer_range_end (for numerical questions)
+- answer_approximate (for numerical questions)
+- answer_precision (for numerical questions)
+
 ## TODO
 
 I'll try to keep this list in order, with the items I'm prioritizing to get done
@@ -199,6 +309,7 @@ sooner listed first.
     - allow users to update the course with this (or make it the default?)
     - https://canvas.instructure.com/doc/api/all_resources.html#method.courses.update
     - course[apply_assignment_group_weights]
+- pushing files
 - manage datetimes for user
     - relative semester/time specification
         - e.g.,
@@ -217,7 +328,6 @@ sooner listed first.
               over to another week, depending on holidays, etc.
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
     - automate daylight savings translations
-- pushing files
 - test other types of module items
     - working:
         - pages
