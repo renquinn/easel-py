@@ -255,6 +255,9 @@ sooner listed first.
   in the file?
 - GUI?
     - https://github.com/willmcgugan/rich
+- support Formula type quiz questions. it's almost there but it probably
+  requires the weird json list formatting as with QuizQuestion.answers. See the
+  TODO comment in `__iter__` from `quiz_question.py`
 
 ### Thoughts
 
