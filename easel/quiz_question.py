@@ -20,7 +20,9 @@ class QuizQuestion(component.Component):
             quiz_group_id=None, question_type=None, position=None,
             points_possible=None, correct_comments=None,
             incorrect_comments=None, neutral_comments=None,
-            text_after_answers=None, answers=[], id=None, filename=""):
+            matching_answer_incorrect_matches=None, formulas=None,
+            variables=None, text_after_answers=None, answers=[],
+            id=None, filename=""):
         super().__init__(create_path=QUIZ_QUESTIONS_PATH,
                 update_path=QUIZ_QUESTION_PATH, db_table=QUIZ_QUESTIONS_TABLE,
                 canvas_wrapper=WRAPPER, filename=filename)
@@ -37,10 +39,15 @@ class QuizQuestion(component.Component):
         self.correct_comments=correct_comments
         self.incorrect_comments=incorrect_comments
         self.neutral_comments=neutral_comments
+        self.matching_answer_incorrect_matches=matching_answer_incorrect_matches
+        self.variables=variables
+        self.formulas=formulas
         self.text_after_answers=text_after_answers
         self.answers=answers
         for answer in self.answers:
-            answer["answer_text"] = answer.get("answer_text", "").replace('\n', ' ').strip()
+            answer_text = answer.get("answer_text", "")
+            if answer_text and isinstance(answer_text, str):
+                answer["answer_text"] = answer_text.replace('\n', ' ').strip()
 
     def __eq__(self, other):
         return (self.id == other.id and
@@ -55,6 +62,8 @@ class QuizQuestion(component.Component):
         new_answers = {}
         for i in range(len(question["question"]["answers"])):
             new_answers[str(i)] = question["question"]["answers"][i]
+        # TODO: for formula questions to work, probably need to reformat the
+        # self.formulas and self.variables lists in the same way as the answers
         question["question"]["answers"] = new_answers
         for key in question:
             yield (key, question[key])
