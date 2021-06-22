@@ -91,7 +91,10 @@ def pull(db, course_id):
 
 def push_syllabus(db, course_id, dry_run):
     with open("syllabus.md") as f:
-        c = {"course": {"syllabus_body": helpers.md2html(f.read())}}
+        c = {"course": {
+            "syllabus_body": helpers.md2html(f.read()),
+            "apply_assignment_group_weights": True
+            }}
         if dry_run:
             print(f"DRYRUN - pushing syllabus")
         else:
