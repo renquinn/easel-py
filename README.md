@@ -305,10 +305,6 @@ sooner listed first.
 - add a new command which generates a component config file formatted and filled
   with common options
     - -i flag could prompt user to enter required options interactively
-- by default, canvas courses do not enable weighted assignment groups
-    - allow users to update the course with this (or make it the default?)
-    - https://canvas.instructure.com/doc/api/all_resources.html#method.courses.update
-    - course[apply_assignment_group_weights]
 - pushing files
 - manage datetimes for user
     - relative semester/time specification
@@ -404,3 +400,7 @@ sooner listed first.
   make the api call to create the group, passing in the questions. So remember
   that in case they open up question groups to work by specifying a question
   directly.
+- by default, canvas courses do not enable weighted assignment groups
+    - allow users to update the course with this (or make it the default?)
+    - I set it up for now to automatically weight (default to True in
+      push_syllabus of course.py)
