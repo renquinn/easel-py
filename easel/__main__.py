@@ -42,22 +42,24 @@ def main():
     parser_course.add_argument("subcommand_argument", nargs="?")
     parser_course.set_defaults(func=commands.cmd_course)
 
+    component_arg = "components"
+
     ## pull
     parser_pull = subparsers.add_parser("pull", help="pull components")
-    parser_pull.add_argument("component_filepath", help="the specific component "
-            "to pull (if pulling a single component)")
+    parser_pull.add_argument(component_arg, nargs="*", help="the specific "
+            "component(s) to pull")
     parser_pull.set_defaults(func=commands.cmd_pull)
 
     ## push
     parser_push = subparsers.add_parser("push", help="push components")
-    parser_push.add_argument("component_filepath", help="the specific "
-            "component(s) to push (if pushing a single component)")
+    parser_push.add_argument(component_arg, nargs="*", help="the specific "
+            "component(s) to push")
     parser_push.set_defaults(func=commands.cmd_push)
 
     ## remove
     parser_remove = subparsers.add_parser("remove", help="remove components")
-    parser_remove.add_argument("component_filepath", help="the specific "
-            "component(s) to remove (if removing a single component)")
+    parser_remove.add_argument(component_arg, nargs="*", help="the specific "
+            "component(s) to remove")
     parser_remove.set_defaults(func=commands.cmd_remove)
 
     args = parser.parse_args()

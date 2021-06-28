@@ -73,32 +73,16 @@ easel course list
 
 List all Canvas courses that are tracked in the database.
 
-### Remove
-
-Remove a given component from the canvas course. This does not delete the yaml
-file or the local database entry for the component. But it will remove the
-database record which tracks that component in Canvas (i.e., it's Canvas ID).
-
-```
-easel remove <component_filepath>
-```
-
-E.g.,
-
-```
-easel remove pages/lesson-1.yaml
-```
-
 ### Push
 
 ```
 easel push
 ```
 
-Reads and pushes a single item of the given component type to the configured
-courses. A push reads the information of each component stored locally and for
-each one, makes a POST or PUT request to Canvas, depending on whether you are
-creating or updating the component in the Canvas course.
+Reads in and pushes a specific component (or multiple components) to the
+configured courses. A push reads the information of each component stored
+locally and for each one, makes a POST or PUT request to Canvas, depending on
+whether you are creating or updating the component in the Canvas course.
 
 Works for the following components:
 
@@ -111,13 +95,29 @@ Works for the following components:
 - quizzes
 
 ```
-easel push [component_filepath]
+easel push [component_filepath ...]
 ```
 
 E.g.,
 
 ```
 easel push pages/lesson-1.yaml
+```
+
+### Remove
+
+Remove a given component(s) from the canvas course. This does not delete the
+yaml file or the local database entry for the component. But it will remove the
+database record which tracks that component in Canvas (i.e., it's Canvas ID).
+
+```
+easel remove [component_filepath ...]
+```
+
+E.g.,
+
+```
+easel remove pages/lesson-1.yaml
 ```
 
 ## File Structure
