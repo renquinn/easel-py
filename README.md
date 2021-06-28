@@ -8,6 +8,12 @@ A Canvas course management tool.
 pip install easel-cli
 ```
 
+To install from the root of the repository: 
+
+```
+pip install -e .
+```
+
 ## Usage
 
 When connected to a Canvas course, easel will read in a yaml file and create the
