@@ -73,40 +73,37 @@ def cmd_course_remove(db, course_search, dry_run):
         print("removed course", courses[0].name)
 
 def cmd_remove(db, args):
-    if not args.component_filepath:
-        # TODO: remove all?
-        pass
+    if not args.components:
+        print("TODO: remove everything")
     else:
         if not args.course:
             args.course = course.find_all(db)
-        for course_ in args.course:
-            component = helpers_yaml.read(args.component_filepath)
-            component.filename = args.component_filepath
-            print(f"removing {component} from {course_.name} ({course_.canvas_id})")
-            component.remove(db, course_, args.dry_run)
+        for component_filepath in args.components:
+            for course_ in args.course:
+                component = helpers_yaml.read(component_filepath)
+                component.filename = component_filepath
+                print(f"removing {component} from {course_.name} ({course_.canvas_id})")
+                component.remove(db, course_, args.dry_run)
 
 def cmd_pull(db, args):
-    if not args.component_filepath:
-        # pull all
-        pass
+    if not args.components:
+        print("TODO: pull everything")
     else:
-        # pull single
-        pass
+        print("TODO: pull", args.components)
 
 def cmd_push(db, args):
-    if not args.component_filepath:
-        # push all
-        pass
+    if not args.components:
+        print("TODO: push everything")
     else:
-        # push single
         if not args.course:
             args.course = course.find_all(db)
-        for course_ in args.course:
-            if args.component_filepath == "syllabus.md":
-                print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
-                course.push_syllabus(db, course_.canvas_id, args.dry_run)
-            else:
-                component = helpers_yaml.read(args.component_filepath)
-                component.filename = args.component_filepath
-                print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
-                component.push(db, course_.canvas_id, args.dry_run)
+        for component_filepath in args.components:
+            for course_ in args.course:
+                if component_filepath == "syllabus.md":
+                    print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
+                    course.push_syllabus(db, course_.canvas_id, args.dry_run)
+                else:
+                    component = helpers_yaml.read(component_filepath)
+                    component.filename = component_filepath
+                    print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
+                    component.push(db, course_.canvas_id, args.dry_run)
