@@ -79,6 +79,9 @@ def cmd_remove(db, args):
     else:
         if not args.course:
             args.course = course.find_all(db)
+        else:
+            args.course = course.match_courses(db, args.course)
+
         for component_filepath in args.components:
             for course_ in args.course:
                 if component_filepath == "syllabus.md":
@@ -105,6 +108,9 @@ def cmd_push(db, args):
     else:
         if not args.course:
             args.course = course.find_all(db)
+        else:
+            args.course = course.match_courses(db, args.course)
+
         for component_filepath in args.components:
             for course_ in args.course:
                 if component_filepath == "syllabus.md":

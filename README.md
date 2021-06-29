@@ -117,6 +117,14 @@ E.g.,
 easel push pages/lesson-1.yaml
 ```
 
+Use the `--course` flag (alternatively `-c`) to specify a subset of your
+courses. I prefer to use the section number to identify a course. For example,
+to push a page to only sections 01 and 02, I would use this command:
+
+```
+easel push -c 01 -c 02 pages/lesson-1.yaml
+```
+
 ### Remove
 
 Remove a given component(s) from the canvas course. This does not delete the
