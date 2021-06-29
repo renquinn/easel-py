@@ -1,3 +1,4 @@
+import os.path
 import yaml
 
 from easel import assignment
@@ -18,10 +19,14 @@ yaml.add_constructor("!Quiz", quiz.constructor)
 yaml.add_constructor("!QuizQuestion", quiz_question.constructor)
 
 def read(filepath):
+    if os.path.isdir(filepath):
+        return None
     with open(filepath) as f:
         return yaml.load(f, Loader=yaml.FullLoader)
 
 def write(filepath, obj):
+    if os.path.isdir(filepath):
+        return None
     with open(filepath, 'w') as f:
         f.write(yaml.dump(obj))
 

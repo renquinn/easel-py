@@ -1,6 +1,7 @@
 import sys
 
 from easel import course
+from easel import files
 from easel import helpers
 from easel import helpers_yaml
 
@@ -80,10 +81,17 @@ def cmd_remove(db, args):
             args.course = course.find_all(db)
         for component_filepath in args.components:
             for course_ in args.course:
-                component = helpers_yaml.read(component_filepath)
-                component.filename = component_filepath
-                print(f"removing {component} from {course_.name} ({course_.canvas_id})")
-                component.remove(db, course_, args.dry_run)
+                if component_filepath == "syllabus.md":
+                    logging.error("Don't remove your syllabus!")
+                else:
+                    component = helpers_yaml.read(component_filepath)
+                    if component and not isinstance(component, str):
+                        component.filename = component_filepath
+                        print(f"removing {component} from {course_.name} ({course_.canvas_id})")
+                        component.remove(db, course_, args.dry_run)
+                    else:
+                        # not a yaml file so assume it's a file/dir to remove
+                        files.remove(db, course_, component_filepath, args.dry_run)
 
 def cmd_pull(db, args):
     if not args.components:
@@ -104,6 +112,11 @@ def cmd_push(db, args):
                     course.push_syllabus(db, course_.canvas_id, args.dry_run)
                 else:
                     component = helpers_yaml.read(component_filepath)
-                    component.filename = component_filepath
-                    print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
-                    component.push(db, course_.canvas_id, args.dry_run)
+                    if component and not isinstance(component, str):
+                        component.filename = component_filepath
+                        print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
+                        component.push(db, course_.canvas_id, args.dry_run)
+                    else:
+                        # not a yaml file so assume it's a file/dir to upload
+                        files.push(db, course_, component_filepath,
+                                args.hidden, args.dry_run)
