@@ -66,6 +66,20 @@ def get_id_from_url(course_url):
         print(f"Invalid course url f{course_url}")
         sys.exit(1)
 
+def match_courses(db, terms):
+    courses = []
+    for course_ in terms:
+        courses += match_course(db, course_)
+    for course_ in courses:
+        print(course_)
+    # TODO: is it worth confirming? maybe only confirm if the length of the
+    # returned courses differs from the length of the search terms list
+    response = input("Found these courses. Correct? (y/n) ")
+    if response.lower() == 'n':
+        print("Please refine your search terms")
+        sys.exit()
+    return courses
+
 def match_course(db, search):
     # assume searching by canvas id first
     results = find(db, search)
@@ -79,7 +93,7 @@ def match_course(db, search):
         test_func = lambda field: term in field
         CourseQ = tinydb.Query()
         courses = db.table(COURSES_TABLE)
-        results += [build(c) for c in courses.search(CourseQ.name.test(test_func))]
+        results += [build(c) for c in courses.search(CourseQ.code.test(test_func))]
     return results
 
 def pull(db, course_id):
