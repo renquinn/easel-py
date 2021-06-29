@@ -8,7 +8,7 @@ A Canvas course management tool.
 pip install easel-cli
 ```
 
-To install from the root of the repository: 
+To install from the root of the repository:
 
 ```
 pip install -e .
@@ -99,6 +99,13 @@ Works for the following components:
 - modules
 - pages
 - quizzes
+- files
+    - Files placed in the `files` directory will be pushed as they are (ignoring
+      the `files` parent directory).
+    - Supports multiple filename arguments and wildcards for batch pushing.
+    - Use the `--hidden` flag to unpublish the file(s) as hidden when pushed (by
+      default canvas publishes files when you upload them).
+    - When pushing a directory, `easel` will push all of its child files.
 
 ```
 easel push [component_filepath ...]
@@ -115,6 +122,19 @@ easel push pages/lesson-1.yaml
 Remove a given component(s) from the canvas course. This does not delete the
 yaml file or the local database entry for the component. But it will remove the
 database record which tracks that component in Canvas (i.e., it's Canvas ID).
+
+Works for the following components:
+
+- assignments
+- assignment groups
+- external tools
+- modules
+- pages
+- quizzes
+- files
+    - Supports multiple filename arguments and wildcards for batch removing.
+    - When removing a directory, `easel` will remove all of its child files
+      (however the empty directory will remain in Canvas).
 
 ```
 easel remove [component_filepath ...]
@@ -315,8 +335,9 @@ sooner listed first.
 - manage datetimes for user
     - relative semester/time specification
         - e.g.,
-            - week 1 day 2 start of class,
-            - week 4 day 1 end of class
+            - module 1 day 2 start of class,
+            - module 6 class 1 start of class,
+            - week 4 day -1 end of class
             - start of week 2 (first day of the week in the morning)
             - end of week 3 (last day of the week at midnight)
         - instead of weeks use modules?
@@ -328,8 +349,23 @@ sooner listed first.
             - easel schedules the modules based on semester dates
             - deadlines are declared with respect to the module (which may carry
               over to another week, depending on holidays, etc.
+        - fields
+            - due_at
+                - detect if already in iso format and if not, parse as the
+                  relative formate
+            - length (for modules only)
+                - the number of 50 minute blocks in this module
+            - previous module?
+            - next module?
+        - implementation
+            - detect semester dates
+                - start and end dates (including finals?)
+                - holidays
+            - map modules to the semester based on module length and semester dates
+                - if no modules, just use weeks
     - API requires strings in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ (e.g., "2013-01-23T23:59:00-07:00")
     - automate daylight savings translations
+    - maybe consider automating final exam times too
 - test other types of module items
     - working:
         - pages
@@ -370,6 +406,11 @@ sooner listed first.
 - support Formula type quiz questions. it's almost there but it probably
   requires the weird json list formatting as with QuizQuestion.answers. See the
   TODO comment in `__iter__` from `quiz_question.py`
+- delete folders
+    - since I don't explicitly create folders, I don't have their ids, so I'd
+      have to get that at some point and track it to eventually delete it
+    - https://canvas.instructure.com/doc/api/files.html#method.folders.api_destroy
+- auto generate syllabus parts
 
 ### Thoughts
 

@@ -18,6 +18,8 @@ def main():
             "or the db")
     parser.add_argument('--course', '-c', action='append', help="the canvas "
             "course(s) on which to perform the action")
+    parser.add_argument('--hidden', action='store_true', help="when pushing "
+            "the given component, do not publish it")
 
     # commands
     subparsers = parser.add_subparsers(dest="command", help="the easel action to "
