@@ -398,9 +398,6 @@ sooner listed first.
         - push: pushes to all courses, unless specified (e.g., -c 02)
         - pull: pulls from all courses, checks for and reports any differences
             - need to add a prompt for overwrite, manually merge, or abort
-            - need to track multiple canvas ids per component in the db. I'm
-              saving the canvas id on each component as if it would be the same
-              across all courses, but this is not the case.
 - pull/push everything in transactions
     - use db as intermediate step, only go to Canvas if db transaction succeeded
     - workflow for pulling whether to overwrite, manually merge, or abort

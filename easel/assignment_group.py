@@ -1,9 +1,12 @@
+from easel import canvas_id
 from easel import component
 from easel import course
+from easel import helpers
 
 ASSIGN_GROUPS_PATH=course.COURSE_PATH+"/assignment_groups"
 ASSIGN_GROUP_PATH=ASSIGN_GROUPS_PATH+"/{}"
 ASSIGN_GROUPS_TABLE="assignment_groups"
+ASSIGN_GROUPS_DIR="assignment_groups"
 
 class AssignmentGroup(component.Component):
 
@@ -18,6 +21,27 @@ class AssignmentGroup(component.Component):
     def __repr__(self):
         return (f"AssignmentGroup(name={self.name}, position={self.position},"
                 f" weight={self.group_weight})")
+
+    @classmethod
+    def build(cls, fields):
+        del fields['id']
+        del fields['sis_source_id']
+        del fields['integration_data']
+        del fields['rules']
+        return AssignmentGroup(**fields)
+
+def pull_all(db, course_, dry_run):
+    r = helpers.get(ASSIGN_GROUPS_PATH.format(course_.canvas_id),
+            dry_run=dry_run)
+    ags = []
+    for ag in r:
+        cid = canvas_id.find_by_id(db, course_.canvas_id, ag.get('id'))
+        if cid:
+            ag['filename'] = cid.filename
+        else:
+            ag['filename'] = ASSIGN_GROUPS_DIR+"/"+ag.get('name', '').lower().replace(' ', '_')+".yaml"
+        ags.append(AssignmentGroup.build(ag))
+    return ags
 
 # Needed for custom yaml tag
 def constructor(loader, node):

@@ -32,3 +32,11 @@ class CanvasID:
     def remove(self, db):
         table = db.table(TABLE)
         table.remove(self.gen_query())
+
+def find_by_id(db, course_id, id_):
+    table = db.table(TABLE)
+    CID = tinydb.Query()
+    results = table.search((CID.course_id == course_id) & (CID.canvas_id == id_))
+    for r in results:
+        return r
+    return None

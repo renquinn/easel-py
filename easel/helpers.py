@@ -11,6 +11,16 @@ import tinydb
 
 API="/api/v1"
 HTTPS="https://"
+DIRS = { # maps a directory name to its easel module name
+        "assignment_groups": "assignment_group",
+        "assignments": "assignment",
+        "external_tools": "external_tool",
+        "files": "files",
+        "modules": "module",
+        "pages": "page",
+        "quiz_questions": "quiz_question",
+        "quizzes": "quiz",
+        }
 
 def md2html(mdtext):
     extensions = ['fenced_code', 'codehilite', 'tables']
@@ -37,9 +47,7 @@ def load_db():
     return tinydb.TinyDB(".easeldb", sort_keys=True, indent=4, separators=(',', ': '))
 
 def setup_directories(dry_run):
-    dirs = ["assignment_groups", "assignments", "external_tools", "files", "modules",
-            "pages", "quiz_questions", "quizzes"]
-    for d in dirs:
+    for d in DIRS:
         if not os.path.isdir(d):
             if dry_run:
                 print(f"DRYRUN - mkdir {d}")
