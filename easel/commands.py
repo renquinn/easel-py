@@ -1,4 +1,6 @@
+import importlib
 import logging
+import os.path
 import sys
 
 from easel import course
@@ -101,7 +103,68 @@ def cmd_pull(db, args):
     if not args.components:
         print("TODO: pull everything")
     else:
-        print("TODO: pull", args.components)
+        if not args.course:
+            args.course = course.find_all(db)
+        else:
+            args.course = course.match_courses(db, args.course)
+
+        for component_filepath in args.components:
+            local = {}
+            remote = {}
+
+            if component_filepath.endswith("*"):
+                component_filepath = component_filepath[:-1]
+            if component_filepath.endswith("/"):
+                component_filepath = component_filepath[:-1]
+
+            if os.path.isdir(component_filepath):
+                if component_filepath not in helpers.DIRS:
+                    logging.error("Invalid directory: "+component_filepath)
+                    break
+
+                # local versions
+                for child_path in os.listdir(component_filepath):
+                    component = helpers_yaml.read(component_filepath + '/' +
+                            child_path)
+                    local[component.filename] = component
+
+                # request remote versions
+                for course_ in args.course:
+                    m = importlib.import_module("easel."+helpers.DIRS[component_filepath])
+                    print(f"pulling all {component_filepath} from {course_.name} ({course_.canvas_id})")
+                    for remote_comp in m.pull_all(db, course_, args.dry_run):
+                        if remote_comp.filename in remote:
+                            remote[remote_comp.filename].append(remote_comp)
+                        else:
+                            remote[remote_comp.filename] = [remote_comp]
+
+            elif os.path.isfile(component_filepath):
+                # local version
+                component = helpers_yaml.read(component_filepath)
+                local[component.filename] = component
+
+                # request remote version(s)
+                for course_ in args.course:
+                    print(f"pulling {component} from {course_.name} ({course_.canvas_id})")
+                    remote_comp = component.pull(db, course_.canvas_id, args.dry_run)
+                    if remote_comp.filename in remote:
+                        remote[remote_comp.filename].append(remote_comp)
+                    else:
+                        remote[remote_comp.filename] = [remote_comp]
+
+            else:
+                logging.error("Cannot find file: " + component_filepath)
+
+            # TODO: merge remote into local
+            for remote_comp in remote:
+                components = remote[remote_comp]
+                if remote_comp in local:
+                    print("TODO: ask user to pick one")
+                if len(remote[remote_comp]) == 1:
+                    print(f"writing {components[0]} to {components[0].filename}")
+                    helpers_yaml.write(components[0].filename, components[0])
+                else:
+                    logging.error("Too many remote options to handle right now...")
 
 def cmd_push(db, args):
     if not args.components:

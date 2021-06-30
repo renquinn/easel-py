@@ -57,7 +57,7 @@ class Component:
         """default: 1 arg -> course_id"""
         return self.create_path.format(*path_args)
 
-    def format_update_path(self, db, *path_args):
+    def format_update_path(self, *path_args):
         """default: 2 args -> course_id, component_id"""
         return self.update_path.format(*path_args)
 
@@ -91,7 +91,7 @@ class Component:
             return
 
         # TODO: confirm they want to delete it?
-        path = self.format_update_path(db, course_id, cid.canvas_id)
+        path = self.format_update_path(course_id, cid.canvas_id)
         resp = helpers.delete(path, dry_run=dry_run)
         err = False
         if "errors" in resp:
@@ -197,7 +197,7 @@ class Component:
                 found = build(type(self).__name__, dict(found[0]))
                 found.merge(self)
 
-            path = self.format_update_path(db, course_id, cid.canvas_id, parent_component)
+            path = self.format_update_path(course_id, cid.canvas_id, parent_component)
             found.preprocess(db, course_id, dry_run)
             resp = helpers.put(path, found, dry_run=dry_run)
             if "errors" in resp:
@@ -224,6 +224,15 @@ class Component:
             if v != getattr(self, k):
                 logging.info(f"self.{k} = {getattr(self, k)} -> other.{k} = {v}")
                 setattr(self, k, v)
+
+    def pull(self, db, course_id, dry_run):
+        cid = canvas_id.CanvasID(self.filename, course_id)
+        cid.find_id(db)
+        path = self.format_update_path(course_id, cid.canvas_id)
+        resp = helpers.get(path, dry_run=dry_run)
+        remote = self.__class__.build(**resp)
+        remote.filename = self.filename
+        return remote
 
 def build(class_name, dictionary):
     from easel import assignment_group

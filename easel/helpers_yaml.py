@@ -28,7 +28,10 @@ def write(filepath, obj):
     if os.path.isdir(filepath):
         return None
     with open(filepath, 'w') as f:
-        f.write(yaml.dump(obj))
+        tag = f"!{obj.__class__.__name__}"
+        data = yaml.dump(dict(obj))
+        out = f"{tag}\n{data}"
+        f.write(out)
 
 def construct_node(loader, node, class_):
     if isSequenceNode(node):
