@@ -29,7 +29,10 @@ def write(filepath, obj):
         return None
     with open(filepath, 'w') as f:
         tag = f"!{obj.__class__.__name__}"
-        data = yaml.dump(dict(obj))
+        fields = dict(obj)
+        if obj.canvas_wrapper:
+            fields = fields[obj.canvas_wrapper]
+        data = yaml.dump(fields)
         out = f"{tag}\n{data}"
         f.write(out)
 
