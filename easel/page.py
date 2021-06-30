@@ -1,3 +1,6 @@
+from tqdm import tqdm
+
+from easel import canvas_id
 from easel import component
 from easel import course
 from easel import helpers
@@ -6,6 +9,7 @@ PAGES_PATH=course.COURSE_PATH+"/pages"
 PAGE_PATH=PAGES_PATH+"/{}" # page url
 TABLE="pages"
 WRAPPER="wiki_page"
+PAGES_DIR="pages"
 
 class Page(component.Component):
 
@@ -29,7 +33,30 @@ class Page(component.Component):
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"
 
+    @classmethod
+    def build(cls, fields):
+        extra_keys = ['page_id', 'created_at', 'updated_at',
+                'hide_from_students', 'last_edited_by', 'locked_for_user',
+                'lock_info', 'lock_explanation', 'html_url']
+        for k in extra_keys:
+            if k in fields:
+                del fields[k]
+        return Page(**fields)
 
 # Needed for custom yaml tag
 def constructor(loader, node):
     return Page(**loader.construct_mapping(node))
+
+def pull_all(db, course_, dry_run):
+    r = helpers.get(PAGES_PATH.format(course_.canvas_id),
+            dry_run=dry_run)
+    pages = []
+    for p in tqdm(r):
+        page_ = helpers.get(PAGE_PATH.format(course_.canvas_id, p.get('url')), dry_run=dry_run)
+        cid = canvas_id.find_by_id(db, course_.canvas_id, page_.get('url'))
+        if cid:
+            page_['filename'] = cid.filename
+        else:
+            page_['filename'] = PAGES_DIR+"/"+page_.get('title', '').lower().replace(' ', '_')+".yaml"
+        pages.append(Page.build(page_))
+    return pages
