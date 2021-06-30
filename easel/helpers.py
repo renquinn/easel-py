@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import os.path
 from pathlib import Path
 
 import markdown
@@ -36,16 +37,15 @@ def load_db():
     return tinydb.TinyDB(".easeldb", sort_keys=True, indent=4, separators=(',', ': '))
 
 def setup_directories(dry_run):
-    dirs = ["assignment_groups", "assignments", "external_tools", "modules",
-            "pages", "quizzes"]
+    dirs = ["assignment_groups", "assignments", "external_tools", "files", "modules",
+            "pages", "quiz_questions", "quizzes"]
     for d in dirs:
-        try:
+        if not os.path.isdir(d):
             if dry_run:
                 print(f"DRYRUN - mkdir {d}")
             else:
+                print(f"Creating directory {d}")
                 os.mkdir(d)
-        except FileExistsError:
-            continue
 
 def delete(path, params={}, decode=True, dry_run=False):
     return do_request(path, params, "DELETE", dry_run=dry_run)
