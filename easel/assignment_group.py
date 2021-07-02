@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 from easel import canvas_id
 from easel import component
 from easel import course
@@ -24,22 +26,23 @@ class AssignmentGroup(component.Component):
 
     @classmethod
     def build(cls, fields):
-        del fields['id']
-        del fields['sis_source_id']
-        del fields['integration_data']
-        del fields['rules']
+        extras = ['id', 'sis_source_id', 'integration_data', 'rules']
+        component.filter_fields(fields, extras)
         return AssignmentGroup(**fields)
 
 def pull_all(db, course_, dry_run):
     r = helpers.get(ASSIGN_GROUPS_PATH.format(course_.canvas_id),
             dry_run=dry_run)
     ags = []
-    for ag in r:
+    for ag in tqdm(r):
         cid = canvas_id.find_by_id(db, course_.canvas_id, ag.get('id'))
         if cid:
             ag['filename'] = cid.filename
         else:
-            ag['filename'] = ASSIGN_GROUPS_DIR+"/"+ag.get('name', '').lower().replace(' ', '_')+".yaml"
+            ag['filename'] = component.gen_filename(ASSIGN_GROUPS_DIR, ag.get('name',''))
+            cid = canvas_id.CanvasID(ag['filename'], course_.canvas_id)
+            cid.canvas_id = ag.get('id')
+            cid.save(db)
         ags.append(AssignmentGroup.build(ag))
     return ags
 
