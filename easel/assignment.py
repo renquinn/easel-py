@@ -1,15 +1,19 @@
+import json
 import tinydb
+from tqdm import tqdm
 
 from easel import assignment_group
 from easel import canvas_id
 from easel import component
 from easel import course
 from easel import helpers
+from easel import helpers_yaml
 
 ASSIGNMENTS_PATH=course.COURSE_PATH+"/assignments"
 ASSIGNMENT_PATH=ASSIGNMENTS_PATH+"/{}"
 ASSIGNMENTS_TABLE="assignments"
 WRAPPER="assignment"
+ASSIGNMENTS_DIR="assignments"
 
 class Assignment(component.Component):
 
@@ -77,7 +81,91 @@ class Assignment(component.Component):
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"
 
+    @classmethod
+    def build(cls, fields):
+        extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
+                'has_overrides', 'all_dates', 'course_id', 'html_url',
+                'submission_download_url', 'due_date_required',
+                'max_name_length', 'turnitin_enabled', 'vericite_enabled',
+                'turnitin_settings', 'peer_review_count', 'group_category_id',
+                'needs_grading_count', 'needs_grading_count_by_section',
+                'post_to_sis', 'integration_id', 'integration_data',
+                'has_submitted_submissions', 'grading_standard_id',
+                'unpublishable', 'only_visible_to_overrides',
+                'locked_for_user', 'lock_info', 'lock_explanation', 'quiz_id',
+                'discussion_topic', 'freeze_on_copy', 'frozen',
+                'frozen_attributes', 'submission', 'assignment_visibility',
+                'overrides', 'moderated_grading', 'grader_count',
+                'final_grader_id', 'grader_comments_visible_to_graders',
+                'graders_anonymous_to_graders',
+                'grader_names_visible_to_final_grader', 'anonymous_grading',
+                'post_manually', 'score_statistics', 'can_submit',
+                "workflow_state", "submissions_download_url", "url",
+                "sis_assignment_id", "secure_params",
+                "require_lockdown_browser", "original_assignment_name",
+                "original_course_id", "original_quiz_id",
+                "original_assignment_id", "muted", "is_quiz_assignment",
+                "in_closed_grading_period", "external_tool_tag_attributes",
+                "can_duplicate", "anonymous_peer_reviews",
+                "anonymous_instructor_annotations", "anonymize_students"]
+        defaults = [("automatic_peer_reviews", False),
+                ("grade_group_students_individually", False),
+                ("intra_group_peer_reviews", False),
+                ("omit_from_final_grade", False),
+                ("peer_reviews", False)]
+        component.filter_fields(fields, extras, defaults)
+        return Assignment(**fields)
+
 
 # Needed for custom yaml tag
 def constructor(loader, node):
     return Assignment(**loader.construct_mapping(node))
+
+def pull_all(db, course_, dry_run):
+    r = helpers.get(ASSIGNMENTS_PATH.format(course_.canvas_id),
+            dry_run=dry_run)
+    assignments = []
+    for assignment in tqdm(r):
+        # skip quizzes (handle in quiz.py)
+        if assignment.get("is_quiz_assignment"):
+            continue
+
+        a = helpers.get(ASSIGNMENT_PATH.format(course_.canvas_id,
+            assignment.get('id')), dry_run=dry_run)
+        cid = canvas_id.find_by_id(db, course_.canvas_id, a.get('id'))
+        if cid:
+            a['filename'] = cid.filename
+        else:
+            a['filename'] = component.gen_filename(ASSIGNMENTS_DIR, a.get('name',''))
+            cid = canvas_id.CanvasID(a['filename'], course_.canvas_id)
+            cid.canvas_id = a.get('id')
+            cid.save(db)
+
+        # check assignment_group_id to fill in assignment_group by name
+        agid = a.get('assignment_group_id')
+        if agid:
+            # first check if we have a cid for the assignment group
+            agcid = canvas_id.find_by_id(db, course_.canvas_id, agid)
+            if agcid:
+                ag = helpers_yaml.read(agcid.filename)
+                if ag:
+                    a['assignment_group'] = ag.name
+                else:
+                    logging.error("failed to find the assignment group for "
+                            f"the assignment group with id {agid}. Your "
+                            ".easeldb may be out of sync")
+            else:
+                # we could look at all the local assignment group files if we
+                # don't have a cid for it but chances are there isn't a file.
+                # so might as well just go back to canvas and ask for it
+                agpath = assignment_group.ASSIGN_GROUP_PATH.format(course_.canvas_id, agid)
+                r = helpers.get(agpath, dry_run=dry_run)
+                if 'name' in r:
+                    a['assignment_group'] = r['name']
+                else:
+                    logging.error("TODO: invalid response from canvas for "
+                            "the assignment group: " + json.dumps(r, indent=4))
+
+
+        assignments.append(Assignment.build(a))
+    return assignments
