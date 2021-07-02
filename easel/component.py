@@ -252,3 +252,26 @@ def build(class_name, dictionary):
             "Quiz": quiz.Quiz,
             }
     return components[class_name](**dictionary)
+
+def gen_filename(dir_, name):
+    return dir_+"/"+name.lower().replace(' ', '_').replace('/', '-')+".yaml"
+
+def filter_fields(fields, extra_fields_to_remove=[], default_fields_to_remove=[]):
+    '''
+    This is used to preprocess the fields of a component as returned by canvas.
+    The idea is to 1) get rid of fields that we don't care about, and 2) get
+    rid of some default values that we don't want filling up our yaml files.
+
+    - extra_fields_to_remove: a list of strings where each string is a key that
+      is returned by canvas for a component but that component's easel class
+      does not know how to handle it
+    - default_fields_to_remove: a list of tuples where each tuple represents
+      the default value of a field as (field_key, default_value)
+    '''
+    for k in extra_fields_to_remove:
+        if k in fields:
+            del fields[k]
+
+    for f in default_fields_to_remove:
+        if f[0] in fields and fields[f[0]] == f[1]:
+            del fields[f[0]]

@@ -35,12 +35,12 @@ class Page(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extra_keys = ['page_id', 'created_at', 'updated_at',
+        extras = ['page_id', 'created_at', 'updated_at',
                 'hide_from_students', 'last_edited_by', 'locked_for_user',
                 'lock_info', 'lock_explanation', 'html_url']
-        for k in extra_keys:
-            if k in fields:
-                del fields[k]
+        defaults = [("front_page", False),
+                ("editing_roles", "teachers")]
+        component.filter_fields(fields, extras, defaults)
         return Page(**fields)
 
 # Needed for custom yaml tag
@@ -57,6 +57,9 @@ def pull_all(db, course_, dry_run):
         if cid:
             page_['filename'] = cid.filename
         else:
-            page_['filename'] = PAGES_DIR+"/"+page_.get('title', '').lower().replace(' ', '_')+".yaml"
+            page_['filename'] = component.gen_filename(PAGES_DIR, page_.get('title', ''))
+            cid = canvas_id.CanvasID(page_['filename'], course_.canvas_id)
+            cid.canvas_id = page_.get('url')
+            cid.save(db)
         pages.append(Page.build(page_))
     return pages
