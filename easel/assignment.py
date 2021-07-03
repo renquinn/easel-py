@@ -27,33 +27,35 @@ class Assignment(component.Component):
             use_rubric_for_grading=None, assignment_group_id=None,
             grade_group_students_individually=None, rubric=None,
             rubric_settings=None, position=None, description=None,
-            assignment_group=None, filename=""):
+            free_form_criterion_comments=None, assignment_group=None,
+            filename=""):
         super().__init__(create_path=ASSIGNMENTS_PATH,
                 update_path=ASSIGNMENT_PATH, db_table=ASSIGNMENTS_TABLE,
                 canvas_wrapper=WRAPPER, filename=filename)
-        self.name = name
-        self.published = published
-        self.grading_type = grading_type
-        self.points_possible = points_possible
-        self.submission_types = submission_types
-        self.allowed_extensions = allowed_extensions
-        self.external_tool_tag_attributes = external_tool_tag_attributes
         self.allowed_attempts = allowed_attempts
-        self.due_at = due_at
-        self.unlock_at = unlock_at
-        self.lock_at = lock_at
-        self.peer_reviews = peer_reviews
-        self.automatic_peer_reviews = automatic_peer_reviews
-        self.peer_reviews_assign_at = peer_reviews_assign_at
-        self.intra_group_peer_reviews = intra_group_peer_reviews
+        self.allowed_extensions = allowed_extensions
         self.anonymous_submissions = anonymous_submissions
-        self.omit_from_final_grade = omit_from_final_grade
-        self.use_rubric_for_grading = use_rubric_for_grading
         self.assignment_group_id = assignment_group_id
+        self.automatic_peer_reviews = automatic_peer_reviews
+        self.due_at = due_at
+        self.external_tool_tag_attributes = external_tool_tag_attributes
+        self.free_form_criterion_comments = free_form_criterion_comments
         self.grade_group_students_individually = grade_group_students_individually
+        self.grading_type = grading_type
+        self.intra_group_peer_reviews = intra_group_peer_reviews
+        self.lock_at = lock_at
+        self.name = name
+        self.omit_from_final_grade = omit_from_final_grade
+        self.peer_reviews = peer_reviews
+        self.peer_reviews_assign_at = peer_reviews_assign_at
+        self.points_possible = points_possible
+        self.position = position
+        self.published = published
         self.rubric = rubric
         self.rubric_settings = rubric_settings
-        self.position = position
+        self.submission_types = submission_types
+        self.unlock_at = unlock_at
+        self.use_rubric_for_grading = use_rubric_for_grading
         if description:
             self.description = helpers.md2html(description.strip())
         else:
@@ -125,6 +127,7 @@ def pull_all(db, course_, dry_run):
     r = helpers.get(ASSIGNMENTS_PATH.format(course_.canvas_id),
             dry_run=dry_run)
     assignments = []
+    print("pulling assignment contents")
     for assignment in tqdm(r):
         # skip quizzes (handle in quiz.py)
         if assignment.get("is_quiz_assignment"):

@@ -3,6 +3,8 @@ import logging
 import os
 import os.path
 from pathlib import Path
+from tqdm import tqdm
+import urllib.parse
 
 import markdown
 import requests
@@ -89,24 +91,47 @@ def do_request(path, params, method, upload=None, dry_run=False):
         print("DRYRUN - making request (use --api or --api-dump for more details)")
         return {}
 
-    # apparently requests can't handle nested dictionaries in the data
-    # parameter so I'm using the json param for it instead
-    resp = requests.request(method, req_url, params=params, json=data,
-            headers=headers)
 
-    r = ""
-    if resp.text:
-        r = resp.json()
+    # make the request in a loop in case the response is paginated
+    # https://canvas.instructure.com/doc/api/file.pagination.html
+    results = []
+    progress_bar = None
+    while True:
+        # apparently requests can't handle nested dictionaries in the data
+        # parameter so I'm using the json param for it instead
+        resp = requests.request(method, req_url, params=params, json=data,
+                headers=headers)
 
-    logging.debug(json.dumps(r, sort_keys=True, indent=4))
-    if resp.status_code == 500:
-        logging.error("Canvas did not like that request. Perhaps the component"
-                " you are trying to push was incorrectly formatted. A common "
-                "mistake is having a typo in the yaml. It might help to "
-                "inspect the request parameters with the --api-dump flag.")
-    if resp.status_code not in [200, 201, 204, 400, 404, 500]:
-        raise requests.HTTPError("Received unexpected status: {}".format(resp.status_code))
-    return r
+        if resp.status_code == 500:
+            logging.error("Canvas did not like that request. Perhaps the component"
+                    " you are trying to push was incorrectly formatted. A common "
+                    "mistake is having a typo in the yaml. It might help to "
+                    "inspect the request parameters with the --api-dump flag.")
+        if resp.status_code not in [200, 201, 204, 400, 404, 500]:
+            raise requests.HTTPError("Received unexpected status: {}".format(resp.status_code))
+
+        # check for pagination
+        if 'next' in resp.links:
+            if not results:
+                last_page = int(urllib.parse.parse_qs(urllib.parse.urlparse(resp.links['last']['url']).query)['page'][0])
+                progress_bar = tqdm(total=last_page)
+                progress_bar.update()
+            req_url = resp.links['next']['url']
+            r = resp.json()
+            logging.debug(json.dumps(r, sort_keys=True, indent=4))
+            results += r
+            progress_bar.update()
+        else:
+            if len(results) == 0 and resp.text:
+                # not paginated
+                results = resp.json()
+                logging.debug(json.dumps(results, sort_keys=True, indent=4))
+            break
+
+    if progress_bar:
+        progress_bar.close()
+
+    return results
 
 class Config:
 

@@ -51,6 +51,7 @@ def pull_all(db, course_, dry_run):
     r = helpers.get(PAGES_PATH.format(course_.canvas_id),
             dry_run=dry_run)
     pages = []
+    print("pulling page contents")
     for p in tqdm(r):
         page_ = helpers.get(PAGE_PATH.format(course_.canvas_id, p.get('url')), dry_run=dry_run)
         cid = canvas_id.find_by_id(db, course_.canvas_id, page_.get('url'))
