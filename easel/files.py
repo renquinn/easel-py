@@ -2,13 +2,16 @@ import json
 import logging
 import os
 import os.path
+
 import requests
+from tqdm import tqdm
 
 from easel import canvas_id
 from easel import course
 from easel import helpers
 
 COURSE_FILES_PATH=course.COURSE_PATH+"/files"
+COURSE_FOLDERS_PATH=course.COURSE_PATH+"/folders"
 FILES_PATH=helpers.API+"/files"
 FILE_PATH=FILES_PATH+"/{}"
 
@@ -95,3 +98,28 @@ def removefile(db, course_, full_path, dry_run):
     r = helpers.delete(FILE_PATH.format(cid.canvas_id), dry_run=dry_run)
     if r.get('upload_status') == 'success':
         cid.remove(db)
+
+def pull_all(db, course_, dry_run):
+    r = helpers.get(COURSE_FOLDERS_PATH.format(course_.canvas_id),
+            dry_run=dry_run)
+    for folder in r:
+        path = folder['full_name'][len("course "):]
+        print(f"pulling list of files in {path}")
+        os.makedirs(path, exist_ok=True)
+        files_path = '/api' + folder['files_url'].split('api')[1]
+        r = helpers.get(files_path, dry_run=dry_run)
+        print(f"downloading files in {path}")
+        for file_ in tqdm(r):
+            if 'filename' not in file_ or 'url' not in file_ or 'id' not in file_:
+                logging.error("Invalid file response from canvas:")
+                print(file_)
+                continue
+            filepath = path + '/' + file_['filename']
+            helpers.download_file(file_['url'], filepath)
+            cid = canvas_id.CanvasID(filepath, course_.canvas_id)
+            cid.canvas_id = file_['id']
+            cid.save(db)
+    # normally we'd return a list of file objects for diffing the local ones,
+    # but since we don't track files in the db we won't be able to diff
+    # anything (in the the way it's done in commands.py)
+    return []

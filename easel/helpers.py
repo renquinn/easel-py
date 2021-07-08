@@ -133,6 +133,15 @@ def do_request(path, params, method, upload=None, dry_run=False):
 
     return results
 
+def download_file(url, filename):
+    resp = requests.get(url, stream=True)
+    resp.raise_for_status()
+    f = open(filename, 'wb')
+    for chunk in resp.iter_content(chunk_size=None):
+        if chunk:
+            f.write(chunk)
+    f.close()
+
 class Config:
 
     def __init__(self):
