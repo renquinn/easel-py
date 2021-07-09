@@ -123,6 +123,48 @@ class Assignment(component.Component):
 def constructor(loader, node):
     return Assignment(**loader.construct_mapping(node))
 
+def pull(db, course_id, assignment_id, dry_run):
+    a = helpers.get(ASSIGNMENT_PATH.format(course_id,
+        assignment_id), dry_run=dry_run)
+    if not a.get('id'):
+        logging.error(f"Assignment {assignment_id} does not exist for course {course_id}")
+        return None, None
+    cid = canvas_id.find_by_id(db, course_id, a.get('id'))
+    if cid:
+        a['filename'] = cid.filename
+    else:
+        a['filename'] = component.gen_filename(ASSIGNMENTS_DIR, a.get('name',''))
+        cid = canvas_id.CanvasID(a['filename'], course_id)
+        cid.canvas_id = a.get('id')
+        cid.save(db)
+
+    # check assignment_group_id to fill in assignment_group by name
+    agid = a.get('assignment_group_id')
+    if agid:
+        # first check if we have a cid for the assignment group
+        agcid = canvas_id.find_by_id(db, course_id, agid)
+        if agcid:
+            ag = helpers_yaml.read(agcid.filename)
+            if ag:
+                a['assignment_group'] = ag.name
+            else:
+                logging.error("failed to find the assignment group for "
+                        f"the assignment group with id {agid}. Your "
+                        ".easeldb may be out of sync")
+        else:
+            # we could look at all the local assignment group files if we
+            # don't have a cid for it but chances are there isn't a file.
+            # so might as well just go back to canvas and ask for it
+            agpath = assignment_group.ASSIGN_GROUP_PATH.format(course_id, agid)
+            r = helpers.get(agpath, dry_run=dry_run)
+            if 'name' in r:
+                a['assignment_group'] = r['name']
+            else:
+                logging.error("TODO: invalid response from canvas for "
+                        "the assignment group: " + json.dumps(r, indent=4))
+
+    return Assignment.build(a), cid
+
 def pull_all(db, course_, dry_run):
     r = helpers.get(ASSIGNMENTS_PATH.format(course_.canvas_id),
             dry_run=dry_run)
@@ -133,42 +175,7 @@ def pull_all(db, course_, dry_run):
         if assignment.get("is_quiz_assignment"):
             continue
 
-        a = helpers.get(ASSIGNMENT_PATH.format(course_.canvas_id,
-            assignment.get('id')), dry_run=dry_run)
-        cid = canvas_id.find_by_id(db, course_.canvas_id, a.get('id'))
-        if cid:
-            a['filename'] = cid.filename
-        else:
-            a['filename'] = component.gen_filename(ASSIGNMENTS_DIR, a.get('name',''))
-            cid = canvas_id.CanvasID(a['filename'], course_.canvas_id)
-            cid.canvas_id = a.get('id')
-            cid.save(db)
-
-        # check assignment_group_id to fill in assignment_group by name
-        agid = a.get('assignment_group_id')
-        if agid:
-            # first check if we have a cid for the assignment group
-            agcid = canvas_id.find_by_id(db, course_.canvas_id, agid)
-            if agcid:
-                ag = helpers_yaml.read(agcid.filename)
-                if ag:
-                    a['assignment_group'] = ag.name
-                else:
-                    logging.error("failed to find the assignment group for "
-                            f"the assignment group with id {agid}. Your "
-                            ".easeldb may be out of sync")
-            else:
-                # we could look at all the local assignment group files if we
-                # don't have a cid for it but chances are there isn't a file.
-                # so might as well just go back to canvas and ask for it
-                agpath = assignment_group.ASSIGN_GROUP_PATH.format(course_.canvas_id, agid)
-                r = helpers.get(agpath, dry_run=dry_run)
-                if 'name' in r:
-                    a['assignment_group'] = r['name']
-                else:
-                    logging.error("TODO: invalid response from canvas for "
-                            "the assignment group: " + json.dumps(r, indent=4))
-
-
-        assignments.append(Assignment.build(a))
+        assignment_, _ = pull(db, course_.canvas_id, assignment.get('id'), dry_run)
+        if assignment_:
+            assignments.append(assignment_)
     return assignments

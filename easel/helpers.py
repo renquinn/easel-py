@@ -126,6 +126,9 @@ def do_request(path, params, method, upload=None, dry_run=False):
                 # not paginated
                 results = resp.json()
                 logging.debug(json.dumps(results, sort_keys=True, indent=4))
+                if 'errors' in results:
+                    for err in results['errors']:
+                        logging.error("From Canvas: " + err.get('message'))
             break
 
     if progress_bar:
