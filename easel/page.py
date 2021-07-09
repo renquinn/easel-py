@@ -47,20 +47,24 @@ class Page(component.Component):
 def constructor(loader, node):
     return Page(**loader.construct_mapping(node))
 
+def pull_page(db, course_id, page_url, dry_run):
+    page_ = helpers.get(PAGE_PATH.format(course_id, page_url), dry_run=dry_run)
+    cid = canvas_id.find_by_id(db, course_id, page_.get('url'))
+    if cid:
+        page_['filename'] = cid.filename
+    else:
+        page_['filename'] = component.gen_filename(PAGES_DIR, page_.get('title', ''))
+        cid = canvas_id.CanvasID(page_['filename'], course_id)
+        cid.canvas_id = page_.get('url')
+        cid.save(db)
+    return Page.build(page_), cid
+
 def pull_all(db, course_, dry_run):
     r = helpers.get(PAGES_PATH.format(course_.canvas_id),
             dry_run=dry_run)
     pages = []
     print("pulling page contents")
     for p in tqdm(r):
-        page_ = helpers.get(PAGE_PATH.format(course_.canvas_id, p.get('url')), dry_run=dry_run)
-        cid = canvas_id.find_by_id(db, course_.canvas_id, page_.get('url'))
-        if cid:
-            page_['filename'] = cid.filename
-        else:
-            page_['filename'] = component.gen_filename(PAGES_DIR, page_.get('title', ''))
-            cid = canvas_id.CanvasID(page_['filename'], course_.canvas_id)
-            cid.canvas_id = page_.get('url')
-            cid.save(db)
-        pages.append(Page.build(page_))
+        page_, _ = pull_page(db, course_.canvas_id, p.get('url'), dry_run)
+        pages.append(page_)
     return pages

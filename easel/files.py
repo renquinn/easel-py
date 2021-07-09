@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import os.path
+import urllib.parse
 
 import requests
 from tqdm import tqdm
@@ -99,6 +100,13 @@ def removefile(db, course_, full_path, dry_run):
     if r.get('upload_status') == 'success':
         cid.remove(db)
 
+def pull_file(db, course_id, url, id_, filepath):
+    helpers.download_file(url, filepath)
+    cid = canvas_id.CanvasID(filepath, course_id)
+    cid.canvas_id = id_
+    cid.save(db)
+    return cid
+
 def pull_all(db, course_, dry_run):
     r = helpers.get(COURSE_FOLDERS_PATH.format(course_.canvas_id),
             dry_run=dry_run)
@@ -106,7 +114,7 @@ def pull_all(db, course_, dry_run):
         path = folder['full_name'][len("course "):]
         print(f"pulling list of files in {path}")
         os.makedirs(path, exist_ok=True)
-        files_path = '/api' + folder['files_url'].split('api')[1]
+        files_path = urllib.parse.urlparse(folder['files_url']).path
         r = helpers.get(files_path, dry_run=dry_run)
         print(f"downloading files in {path}")
         for file_ in tqdm(r):
@@ -115,10 +123,7 @@ def pull_all(db, course_, dry_run):
                 print(file_)
                 continue
             filepath = path + '/' + file_['filename']
-            helpers.download_file(file_['url'], filepath)
-            cid = canvas_id.CanvasID(filepath, course_.canvas_id)
-            cid.canvas_id = file_['id']
-            cid.save(db)
+            pull_file(db, course_.canvas_id, file_['url'], file_['id'], filepath)
     # normally we'd return a list of file objects for diffing the local ones,
     # but since we don't track files in the db we won't be able to diff
     # anything (in the the way it's done in commands.py)
