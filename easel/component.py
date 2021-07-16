@@ -57,7 +57,7 @@ class Component:
         """default: 1 arg -> course_id"""
         return self.create_path.format(*path_args)
 
-    def format_update_path(self, *path_args):
+    def format_update_path(self, db, *path_args):
         """default: 2 args -> course_id, component_id"""
         return self.update_path.format(*path_args)
 
@@ -73,10 +73,10 @@ class Component:
     def gen_query(self):
         return tinydb.Query().filename == self.filename
 
-    def preprocess(self, db, course_id, dry_run):
+    def preprocess(self, db, course_, dry_run):
         pass
 
-    def postprocess(self, db, course_id, dry_run):
+    def postprocess(self, db, course_, dry_run):
         pass
 
     def remove(self, db, course_, dry_run):
@@ -84,18 +84,18 @@ class Component:
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
         if not cid.canvas_id:
-            print(f"failed to delete {self} from course {course_}")
+            print(f"Failed to delete {self} from course {course_}")
             print("No canvas information found for the given component. If the"
                     " component still exists in Canvas we may have lost track "
                     "of it so you will have to manually delete it. Sorry!")
             return
 
         # TODO: confirm they want to delete it?
-        path = self.format_update_path(course_id, cid.canvas_id)
+        path = self.format_update_path(db, course_id, cid.canvas_id)
         resp = helpers.delete(path, dry_run=dry_run)
         err = False
         if "errors" in resp:
-            print(f"canvas failed to delete the component {self}")
+            print(f"Canvas failed to delete the component {self}")
             for error in resp['errors']:
                 if "does not exist" in error['message']:
                     print("But that's ok because you were probably just "
@@ -104,7 +104,7 @@ class Component:
                     print("CANVAS ERROR:", error['message'])
                     err = True
         if err:
-            print("local remove action aborted")
+            print("Local remove action aborted")
             print("Canvas may or may not have successfully deleted the component")
             return
 
@@ -119,7 +119,7 @@ class Component:
         table = db.table(self.table)
         table.upsert(c, self.gen_query())
 
-    def push(self, db, course_id, dry_run, parent_component=None):
+    def push(self, db, course_, dry_run, parent_component=None):
         """
         push the component to the given canvas course
 
@@ -132,6 +132,7 @@ class Component:
         commands.py. However, this other location should mimic that typical
         behavior (see preprocess() in module.py).
         """
+        course_id = course_.canvas_id
         found = self.find(db)
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
@@ -161,7 +162,7 @@ class Component:
         if cid.canvas_id == "":
             # create
             path = self.format_create_path(db, course_id, parent_component)
-            self.preprocess(db, course_id, dry_run)
+            self.preprocess(db, course_, dry_run)
             resp = helpers.post(path, self, dry_run=dry_run)
 
             if dry_run:
@@ -185,7 +186,7 @@ class Component:
                 else:
                     raise ValueError("TODO: handle unexpected response when creating component")
 
-            self.postprocess(db, course_id, dry_run)
+            self.postprocess(db, course_, dry_run)
 
         else:
             # update
@@ -197,8 +198,8 @@ class Component:
                 found = build(type(self).__name__, dict(found[0]))
                 found.merge(self)
 
-            path = self.format_update_path(course_id, cid.canvas_id, parent_component)
-            found.preprocess(db, course_id, dry_run)
+            path = self.format_update_path(db, course_id, cid.canvas_id, parent_component)
+            found.preprocess(db, course_, dry_run)
             resp = helpers.put(path, found, dry_run=dry_run)
             if "errors" in resp:
                 print(f"failed to update the component {found}")
@@ -215,7 +216,7 @@ class Component:
             else:
                 found.save(db)
 
-            found.postprocess(db, course_id, dry_run)
+            found.postprocess(db, course_, dry_run)
 
     def merge(self, other):
         # TODO: include some sort of confirmation prompt? or maybe that's what
@@ -228,7 +229,7 @@ class Component:
     def pull(self, db, course_id, dry_run):
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
-        path = self.format_update_path(course_id, cid.canvas_id)
+        path = self.format_update_path(db, course_id, cid.canvas_id)
         resp = helpers.get(path, dry_run=dry_run)
         remote = self.__class__.build(**resp)
         remote.filename = self.filename
