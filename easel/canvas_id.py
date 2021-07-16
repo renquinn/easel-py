@@ -39,3 +39,11 @@ def find_by_id(db, course_id, id_):
     result = table.get((CID.course_id == course_id) & (CID.canvas_id == id_))
     if result:
         return CanvasID(**result)
+
+def find_by_prefix(db, course_id, prefix):
+    table = db.table(TABLE)
+    CID = tinydb.Query()
+    results = table.search((CID.filename.matches("^"+prefix)) & (CID.course_id == course_id))
+    for result in results:
+        if result:
+            yield CanvasID(**result)
