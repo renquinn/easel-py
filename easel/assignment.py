@@ -77,8 +77,8 @@ class Assignment(component.Component):
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
-    def preprocess(self, db, course_id, dry_run):
-         self.get_assignment_group_id(db, course_id)
+    def preprocess(self, db, course_, dry_run):
+         self.get_assignment_group_id(db, course_.canvas_id)
 
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"

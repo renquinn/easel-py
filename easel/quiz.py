@@ -80,12 +80,13 @@ class Quiz(component.Component):
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
-    def preprocess(self, db, course_id, dry_run):
-         self.get_assignment_group_id(db, course_id)
+    def preprocess(self, db, course_, dry_run):
+         self.get_assignment_group_id(db, course_.canvas_id)
          self.remember_published = self.published
          self.published = False
 
-    def postprocess(self, db, course_id, dry_run):
+    def postprocess(self, db, course_, dry_run):
+        course_id = course_.canvas_id
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
         if not cid.canvas_id:
@@ -111,7 +112,7 @@ class Quiz(component.Component):
         # push the questions
         for question in questions:
             print(f"\tpushing {question} to Quiz {self}")
-            question.push(db, course_id, dry_run, parent_component=self)
+            question.push(db, course_, dry_run, parent_component=self)
 
         # once I push the questions, canvas doesn't seem to update the
         # quiz's points possible until I save the entire quiz again...

@@ -27,7 +27,8 @@ class Module(component.Component):
     def __repr__(self):
         return f"Module(name={self.name}, position={self.position})"
 
-    def postprocess(self, db, course_id, dry_run):
+    def postprocess(self, db, course_, dry_run):
+        course_id = course_.canvas_id
         cid = canvas_id.CanvasID(self.filename, course_id)
         cid.find_id(db)
         if not cid.canvas_id:
@@ -47,8 +48,8 @@ class Module(component.Component):
             else:
                 raise TypeError(f"Invalid item specification on module {self}")
 
-            print(f"\tpushing ModuleItem {item_component} to Module {self}")
-            item_component.push(db, course_id, dry_run, parent_component=self)
+            print(f"\tpushing {item_component} to {self}")
+            item_component.push(db, course_, dry_run, parent_component=self)
 
 # Needed for custom yaml tag
 def constructor(loader, node):
