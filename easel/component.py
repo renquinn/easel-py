@@ -112,6 +112,12 @@ class Component:
             print(f"DRYRUN - deleting the canvas relationship for {self}")
         else:
             cid.remove(db)
+            # delete any child elements (e.g., module items)
+            # filename format for nested child objects is
+            # {parent_filename}--{child_identifier}
+            children = canvas_id.find_by_prefix(db, course_id, cid.filename+"--")
+            for child in children:
+                child.remove(db)
 
     def save(self, db):
         c = dict(self.gen_fields())
