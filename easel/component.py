@@ -189,6 +189,8 @@ class Component:
                     self.save(db)
                     cid.canvas_id = resp['url']
                     cid.save(db)
+                elif "message" in resp:
+                    logging.error(resp['message'])
                 else:
                     raise ValueError("TODO: handle unexpected response when creating component")
 

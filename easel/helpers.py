@@ -24,6 +24,17 @@ DIRS = { # maps a directory name to its easel module name
         "quizzes": "quiz",
         }
 
+def isurl(url):
+    # requires protocol in addition to hostname
+    try:
+        parsed = urllib.parse.urlparse(url)
+        return all([parsed.scheme, parsed.netloc])
+    except:
+        return False
+
+def make_nested_filename(parent, child):
+    return f"{parent}--{child}"
+
 def md2html(mdtext):
     extensions = ['fenced_code', 'codehilite', 'tables']
     return markdown.markdown(mdtext, extensions=extensions)

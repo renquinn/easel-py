@@ -376,14 +376,15 @@ sooner listed first.
     - maybe consider automating final exam times too
 - test other types of module items
     - working:
-        - pages
-        - assignments
-    - need testing:
+        - Page
+        - Assignment
         - File
-        - Discussion
-        - Quiz
         - SubHeader
         - ExternalUrl
+    - need testing:
+        - Discussion
+        - Quiz
+          - pulls down as an assignment?
         - ExternalTool
 - better logging
 - I've been assuming user pulls or pushes from the course's root directory. Need
