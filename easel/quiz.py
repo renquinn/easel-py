@@ -1,6 +1,7 @@
 import logging
 import random
 import tinydb
+from tqdm import tqdm
 
 from easel import assignment_group
 from easel import canvas_id
@@ -13,6 +14,7 @@ QUIZZES_PATH=course.COURSE_PATH+"/quizzes"
 QUIZ_PATH=QUIZZES_PATH+"/{}"
 QUIZZES_TABLE="quizzes"
 WRAPPER="quiz"
+QUIZZES_DIR="quizzes"
 
 class Quiz(component.Component):
 
@@ -67,6 +69,112 @@ class Quiz(component.Component):
         self.assignment_group = assignment_group
         # quiz_questions can only be pushed after the quiz is created (postprocess)
         self.quiz_questions = quiz_questions
+
+    @classmethod
+    def build(cls, fields):
+        extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
+                'html_url', 'mobile_url', 'preview_url', 'unpublishable',
+                'lock_info', 'speed_grader_url', 'quiz_extensions_url',
+                'all_dates', 'version_number', 'question_types',
+                'question_count', 'has_overrides', 'all_dates', 'course_id',
+                'submission_download_url', 'due_date_required',
+                'max_name_length', 'turnitin_enabled', 'vericite_enabled',
+                'turnitin_settings', 'peer_review_count', 'group_category_id',
+                'needs_grading_count', 'needs_grading_count_by_section',
+                'post_to_sis', 'integration_id', 'integration_data',
+                'has_submitted_submissions', 'grading_standard_id',
+                'unpublishable', 'only_visible_to_overrides',
+                'locked_for_user', 'lock_info', 'lock_explanation', 'quiz_id',
+                'discussion_topic', 'freeze_on_copy', 'frozen',
+                'frozen_attributes', 'submission', 'assignment_visibility',
+                'overrides', 'moderated_grading', 'grader_count',
+                'final_grader_id', 'grader_comments_visible_to_graders',
+                'graders_anonymous_to_graders',
+                'grader_names_visible_to_final_grader', 'anonymous_grading',
+                'post_manually', 'score_statistics', 'can_submit',
+                "workflow_state", "submissions_download_url", "url",
+                "sis_assignment_id", "secure_params",
+                "require_lockdown_browser", "original_assignment_name",
+                "original_course_id", "original_quiz_id",
+                "original_assignment_id", "muted", "is_quiz_assignment",
+                "in_closed_grading_period", "external_tool_tag_attributes",
+                "can_duplicate", "anonymous_peer_reviews",
+                "anonymous_instructor_annotations", "anonymize_students",
+                "timer_autosubmit_disabled", "points_possible",
+                "can_unpublish", "can_update", "permissions",
+                "quiz_reports_url", "quiz_statistics_url",
+                "message_students_url", "section_count",
+                "quiz_submission_versions_html_url", "assignment_id",
+                "has_access_code", "migration_id"
+                ]
+        defaults = [("quiz_type", "assignment"),
+                ("allowed_attempts", -1),
+                ("scoring_policy", "keep_highest"),
+                ("published", True),
+                ("anonymous_submissions", False),
+                ("show_correct_answers", True),
+                ("require_lockdown_browser_for_results", False),
+                ("require_lockdown_browser_monitor", False),
+                ("lockdown_browser_monitor_data", ""),
+                ("one_time_results", False),
+                ("show_correct_answers_last_attempt", False),
+                ("hide_results", None),
+                ("time_limit", None),
+                ("access_code", None),
+                ("ip_filter", None),
+                ("show_correct_answers_at", None),
+                ("hide_correct_answers_at", None),
+                ("cant_go_back", False),
+                ("one_question_at_a_time", False),
+                ]
+        component.filter_fields(fields, extras, defaults)
+        if 'description' in fields:
+            fields['description'] = helpers.filter_canvas_html(fields['description'])
+
+        extras = ['id', "quiz_id", "quiz_group_id", "assessment_question_id",
+                'migration_id', 'matches']
+        defaults = [("correct_comments", ""), ("incorrect_comments", ""),
+                ("neutral_comments", None), ("correct_comments_html", None),
+                ("incorrect_comments_html", None),
+                ("neutral_comments_html", None),
+                ("variables", None),
+                ("formulas", None),
+                ("answer_tolerance", None),
+                ("formula_decimal_places", None),
+                ("matches", None),
+                ("matching_answer_incorrect_matches", None)]
+        all_qqfields = {}
+        all_qafields = {}
+        for qqfields in fields['quiz_questions']:
+            component.filter_fields(qqfields, extras, defaults)
+            if 'question_text' in qqfields:
+                qqfields['question_text'] = helpers.filter_canvas_html(qqfields['question_text'])
+
+            all_qqfields.update(qqfields)
+            for answer in qqfields['answers']:
+                component.filter_fields(answer, ['id', 'html', 'migration_id',
+                    'blank_id', 'match_id', 'comments_html',
+                    'incorrect_comments_html', 'correct_comments_html'],
+                    [("comments", "")])
+                answer_keys = [("text", "answer_text"),
+                        ("weight", "answer_weight"),
+                        ("left", "answer_match_left"),
+                        ("right", "answer_match_right"),
+                        ("comments", "answer_comments")]
+                # the keys for answers are inconsistent between push and pull
+                # api calls so we need to rename some things
+                for ak in answer_keys:
+                    if ak[0] in answer:
+                        answer[ak[1]] = answer[ak[0]]
+                        del answer[ak[0]]
+                all_qafields.update(answer)
+        try:
+            return Quiz(**fields)
+        except:
+            import json
+            print(json.dumps(all_qqfields, indent=4))
+            print(json.dumps(all_qafields, indent=4))
+            raise ValueError
 
     def get_assignment_group_id(self, db, course_id):
         if self.assignment_group:
@@ -192,3 +300,61 @@ def load_questions_file(filename):
 # Needed for custom yaml tag
 def constructor(loader, node):
     return Quiz(**loader.construct_mapping(node))
+
+def pull(db, course_, quiz_, dry_run):
+    course_id = course_.canvas_id
+    quiz_id = quiz_.get('id')
+    if not quiz_id:
+        logging.error(f"Quiz {quiz_id} does not exist for course {course_id}")
+        return None, None
+
+    cid = canvas_id.find_by_id(db, course_id, quiz_id)
+    if cid:
+        quiz_['filename'] = cid.filename
+    else:
+        quiz_['filename'] = component.gen_filename(QUIZZES_DIR, quiz_.get('title',''))
+        cid = canvas_id.CanvasID(quiz_['filename'], course_id)
+        cid.canvas_id = quiz_.get('id')
+        cid.save(db)
+
+    # check assignment_group_id to fill in assignment_group by name
+    agid = quiz_.get('assignment_group_id')
+    if agid:
+        # first check if we have a cid for the assignment group
+        agcid = canvas_id.find_by_id(db, course_id, agid)
+        if agcid:
+            ag = helpers_yaml.read(agcid.filename)
+            if ag:
+                quiz_['assignment_group'] = ag.name
+            else:
+                logging.error("failed to find the assignment group for "
+                        f"the assignment group with id {agid}. Your "
+                        ".easeldb may be out of sync")
+        else:
+            # we could look at all the local assignment group files if we
+            # don't have a cid for it but chances are there isn't a file.
+            # so might as well just go back to canvas and ask for it
+            agpath = assignment_group.ASSIGN_GROUP_PATH.format(course_id, agid)
+            r = helpers.get(agpath, dry_run=dry_run)
+            if 'name' in r:
+                quiz_['assignment_group'] = r['name']
+            else:
+                logging.error("TODO: invalid response from canvas for "
+                        "the assignment group: " + json.dumps(r, indent=4))
+
+    # quiz questions
+    quiz_questions_path=QUIZ_PATH.format(course_.canvas_id, quiz_id)+"/questions"
+    quiz_questions = helpers.get(quiz_questions_path)
+    quiz_['quiz_questions'] = quiz_questions
+
+    return Quiz.build(quiz_), cid
+
+def pull_all(db, course_, dry_run):
+    r = helpers.get(QUIZZES_PATH.format(course_.canvas_id), dry_run=dry_run)
+    quizzes = []
+    print("pulling quiz questions")
+    for quiz_json in tqdm(r):
+        quiz_, _ = pull(db, course_, quiz_json, dry_run)
+        if quiz_:
+            quizzes.append(quiz_)
+    return quizzes
