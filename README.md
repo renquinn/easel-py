@@ -404,11 +404,16 @@ sooner listed first.
     - workflow for pulling whether to overwrite, manually merge, or abort
     - When pushing, update database with result (e.g., when pushing to a new
       course, the canvas id will be different)
+- merge prompt
+    - https://twitter.com/_wilfredh/status/1413002445366591496
 - add a progress bar for pushing and pulling
 - add a command to publish components rather than changing the published field
   in the file?
 - GUI?
     - https://github.com/willmcgugan/rich
+    - https://github.com/willmcgugan/textual
+    - https://github.com/pfalcon/picotui
+    - https://docs.python.org/3/howto/curses.html
 - support Formula type quiz questions. it's almost there but it probably
   requires the weird json list formatting as with QuizQuestion.answers. See the
   TODO comment in `__iter__` from `quiz_question.py`

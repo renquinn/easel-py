@@ -141,6 +141,7 @@ def cmd_pull(db, args):
             elif os.path.isfile(component_filepath):
                 # local version
                 component = helpers_yaml.read(component_filepath)
+                component.filename = component_filepath
                 local[component.filename] = component
 
                 # request remote version(s)
