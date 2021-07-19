@@ -41,6 +41,8 @@ class Page(component.Component):
         defaults = [("front_page", False),
                 ("editing_roles", "teachers")]
         component.filter_fields(fields, extras, defaults)
+        if 'body' in fields:
+            fields['body'] = helpers.filter_canvas_html(fields['body'])
         return Page(**fields)
 
 # Needed for custom yaml tag
