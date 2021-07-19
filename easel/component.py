@@ -201,7 +201,7 @@ class Component:
             if not found:
                 found = self
             elif len(found) > 1:
-                    raise ValueError("TODO: handle too many results, means the filename was not unique")
+                raise ValueError("TODO: handle too many results, means the filename was not unique")
             else:
                 found = build(type(self).__name__, dict(found[0]))
                 found.merge(self)
@@ -239,7 +239,7 @@ class Component:
         cid.find_id(db)
         path = self.format_update_path(db, course_id, cid.canvas_id)
         resp = helpers.get(path, dry_run=dry_run)
-        remote = self.__class__.build(**resp)
+        remote = self.__class__.build(resp)
         remote.filename = self.filename
         return remote
 
