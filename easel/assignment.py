@@ -116,6 +116,8 @@ class Assignment(component.Component):
                 ("omit_from_final_grade", False),
                 ("peer_reviews", False)]
         component.filter_fields(fields, extras, defaults)
+        if 'description' in fields:
+            fields['description'] = helpers.filter_canvas_html(fields['description'])
         return Assignment(**fields)
 
 

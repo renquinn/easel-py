@@ -3,6 +3,7 @@ import logging
 import os
 import os.path
 from pathlib import Path
+import re
 from tqdm import tqdm
 import urllib.parse
 
@@ -34,6 +35,17 @@ def isurl(url):
 
 def make_nested_filename(parent, child):
     return f"{parent}--{child}"
+
+def filter_canvas_html(html):
+    linktags = re.findall("<link.*?>", html)
+    for lt in linktags:
+        if 'canvas_global_app' in lt:
+            html = html.replace(lt, '')
+    scripttags = re.findall("<script.*?><\/script>", html)
+    for st in scripttags:
+        if 'canvas_global_app' in st:
+            html = html.replace(st, '')
+    return html
 
 def md2html(mdtext):
     extensions = ['fenced_code', 'codehilite', 'tables']
