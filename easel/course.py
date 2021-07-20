@@ -82,9 +82,10 @@ def match_courses(db, terms):
 
 def match_course(db, search):
     # assume searching by canvas id first
-    results = find(db, search)
-    if len(results) > 0:
-        return results
+    if search.isdigit():
+        results = find(db, int(search))
+        if len(results) > 0:
+            return results
 
     # if we didn't find the course, user might have given the section number
     # so search for it by name
