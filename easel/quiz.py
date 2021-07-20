@@ -70,6 +70,9 @@ class Quiz(component.Component):
         # quiz_questions can only be pushed after the quiz is created (postprocess)
         self.quiz_questions = quiz_questions
 
+    def __repr__(self):
+        return f"Quiz(title={self.title}, published={self.published})"
+
     @classmethod
     def build(cls, fields):
         extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
@@ -153,8 +156,8 @@ class Quiz(component.Component):
             all_qqfields.update(qqfields)
             for answer in qqfields['answers']:
                 component.filter_fields(answer, ['id', 'html', 'migration_id',
-                    'blank_id', 'match_id', 'comments_html',
-                    'incorrect_comments_html', 'correct_comments_html'],
+                    'comments_html', 'incorrect_comments_html',
+                    'correct_comments_html'],
                     [("comments", "")])
                 answer_keys = [("text", "answer_text"),
                         ("weight", "answer_weight"),
@@ -231,8 +234,13 @@ class Quiz(component.Component):
         if self.remember_published:
             helpers.put(quiz_path, {"quiz": {"published": True}})
 
-    def __repr__(self):
-        return f"Quiz(title={self.title}, published={self.published})"
+    def pull(self, db, course_, dry_run):
+        cid = canvas_id.CanvasID(self.filename, course_.canvas_id)
+        cid.find_id(db)
+        quiz_fields = dict(self.gen_fields())
+        quiz_fields['id'] = cid.canvas_id
+        pulled, _ = pull(db, course_, quiz_fields, dry_run)
+        return pulled
 
 QUESTION_ID_KEY='id'
 def build_questions(quiz_questions):

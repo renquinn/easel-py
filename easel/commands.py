@@ -148,7 +148,7 @@ def cmd_pull(db, args):
                 # request remote version(s)
                 for course_ in args.course:
                     print(f"pulling {component} from {course_.name} ({course_.canvas_id})")
-                    remote_comp = component.pull(db, course_.canvas_id, args.dry_run)
+                    remote_comp = component.pull(db, course_, args.dry_run)
                     if remote_comp.filename in remote:
                         remote[remote_comp.filename].append(remote_comp)
                     else:
