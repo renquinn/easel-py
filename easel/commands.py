@@ -124,9 +124,10 @@ def cmd_pull(db, args):
 
                 # local versions
                 for child_path in os.listdir(component_filepath):
-                    component = helpers_yaml.read(component_filepath + '/' +
-                            child_path)
-                    local[component.filename] = component
+                    if not component_filepath.startswith("files"):
+                        component = helpers_yaml.read(component_filepath + '/' +
+                                child_path)
+                        local[component.filename] = component
 
                 # request remote versions
                 for course_ in args.course:
