@@ -9,6 +9,7 @@ from easel import course
 from easel import files
 from easel import helpers
 from easel import page
+from easel import quiz
 
 MODULES_PATH=course.COURSE_PATH+"/modules"
 MODULE_PATH=MODULES_PATH+"/{}"
@@ -154,11 +155,9 @@ def pull_all(db, course_, dry_run):
                     # download the file
                     icid = files.pull_file(db, course_.canvas_id, url, file_['id'], filepath)
                 elif item['type'] == 'Assignment':
-                    _, icid = assignment.pull(db, course_.canvas_id, item_id, dry_run)
+                    _, icid = assignment.pull(db, course_, item_id, dry_run)
                 elif item['type'] == 'Quiz':
-                    # TODO: pull quiz
-                    logging.warn("Cannot pull quizzes yet...")
-                    continue
+                    _, icid = quiz.pull(db, course_, item, dry_run)
                 elif item['type'] == 'SubHeader':
                     built_item = {'title': item['title']}
                     if not item['published']:

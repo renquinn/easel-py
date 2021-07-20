@@ -125,7 +125,8 @@ class Assignment(component.Component):
 def constructor(loader, node):
     return Assignment(**loader.construct_mapping(node))
 
-def pull(db, course_id, assignment_id, dry_run):
+def pull(db, course_, assignment_id, dry_run):
+    course_id = course_.canvas_id
     a = helpers.get(ASSIGNMENT_PATH.format(course_id,
         assignment_id), dry_run=dry_run)
     if not a.get('id'):
@@ -177,7 +178,7 @@ def pull_all(db, course_, dry_run):
         if assignment.get("is_quiz_assignment"):
             continue
 
-        assignment_, _ = pull(db, course_.canvas_id, assignment.get('id'), dry_run)
+        assignment_, _ = pull(db, course_, assignment.get('id'), dry_run)
         if assignment_:
             assignments.append(assignment_)
     return assignments

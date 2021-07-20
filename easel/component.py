@@ -234,10 +234,10 @@ class Component:
                 logging.info(f"self.{k} = {getattr(self, k)} -> other.{k} = {v}")
                 setattr(self, k, v)
 
-    def pull(self, db, course_id, dry_run):
-        cid = canvas_id.CanvasID(self.filename, course_id)
+    def pull(self, db, course_, dry_run):
+        cid = canvas_id.CanvasID(self.filename, course_.canvas_id)
         cid.find_id(db)
-        path = self.format_update_path(db, course_id, cid.canvas_id)
+        path = self.format_update_path(db, course_.canvas_id, cid.canvas_id)
         resp = helpers.get(path, dry_run=dry_run)
         remote = self.__class__.build(resp)
         remote.filename = self.filename
