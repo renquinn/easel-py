@@ -37,6 +37,8 @@ def make_nested_filename(parent, child):
     return f"{parent}--{child}"
 
 def filter_canvas_html(html):
+    if not html:
+        return html
     linktags = re.findall("<link.*?>", html)
     for lt in linktags:
         if 'canvas_global_app' in lt:
