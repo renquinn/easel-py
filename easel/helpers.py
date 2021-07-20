@@ -147,19 +147,20 @@ def do_request(path, params, method, upload=None, dry_run=False):
             results += r
             progress_bar.update()
         else:
-            if len(results) == 0 and resp.text:
-                # not paginated
-                results = resp.json()
-                logging.debug(json.dumps(results, sort_keys=True, indent=4))
-                if 'errors' in results:
-                    for err in results['errors']:
-                        logging.error("Canvas Error: " + err.get('message'))
-            else:
-                # the last page
-                r = resp.json()
-                logging.debug(json.dumps(r, sort_keys=True, indent=4))
-                results += r
-                progress_bar.update()
+            if 'application/json' in resp.headers.get('content-type', ''):
+                if len(results) == 0:
+                    # not paginated
+                    results = resp.json()
+                    logging.debug(json.dumps(results, sort_keys=True, indent=4))
+                    if 'errors' in results:
+                        for err in results['errors']:
+                            logging.error("Canvas Error: " + err.get('message'))
+                else:
+                    # the last page
+                    r = resp.json()
+                    logging.debug(json.dumps(r, sort_keys=True, indent=4))
+                    results += r
+                    progress_bar.update()
             break
 
     if progress_bar:
