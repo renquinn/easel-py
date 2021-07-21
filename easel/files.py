@@ -17,13 +17,13 @@ FILES_PATH=helpers.API+"/files"
 FILE_PATH=FILES_PATH+"/{}"
 
 def push(db, course_, component_filepath, hidden, dry_run):
-    print(f"pushing {component_filepath} to {course_.name} ({course_.canvas_id})")
+    print(f"pushing File {component_filepath} to {course_.name} ({course_.canvas_id})")
     if os.path.isdir(component_filepath):
         pushdir(db, course_, component_filepath, hidden, dry_run)
     elif os.path.isfile(component_filepath):
         pushfile(db, course_, component_filepath, hidden, dry_run)
     else:
-        logging.error("Invalid file type for " + component_filepath)
+        logging.error("Invalid File type for " + component_filepath)
 
 def pushdir(db, course_, dir_path, hidden, dry_run):
     for child_path in os.listdir(dir_path):
@@ -127,4 +127,6 @@ def pull_all(db, course_, dry_run):
     # normally we'd return a list of file objects for diffing the local ones,
     # but since we don't track files in the db we won't be able to diff
     # anything (in the the way it's done in commands.py)
+    # TODO: but it might be worth returning the contents of the files, although
+    # we'd want to optimize for memory usage in case of large files
     return []
