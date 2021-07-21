@@ -96,9 +96,10 @@ def removedir(db, course_, dir_path, dry_run):
 def removefile(db, course_, full_path, dry_run):
     cid = canvas_id.CanvasID(full_path, course_.canvas_id)
     cid.find_id(db)
-    r = helpers.delete(FILE_PATH.format(cid.canvas_id), dry_run=dry_run)
-    if r.get('upload_status') == 'success':
-        cid.remove(db)
+    if cid.canvas_id:
+        r = helpers.delete(FILE_PATH.format(cid.canvas_id), dry_run=dry_run)
+        if r.get('upload_status') == 'success':
+            cid.remove(db)
 
 def pull_file(db, course_id, url, id_, filepath):
     helpers.download_file(url, filepath)
