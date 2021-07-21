@@ -78,14 +78,35 @@ def cmd_course_remove(db, course_search, dry_run):
 
 def cmd_remove(db, args):
     if not args.components:
-        print("TODO: remove everything")
-    else:
-        if not args.course:
-            args.course = course.find_all(db)
-        else:
-            args.course = course.match_courses(db, args.course)
+        # remove everything
+        args.components = ["modules", "assignments", "files", "pages",
+                "quizzes", "assignment_groups"]
 
-        for component_filepath in args.components:
+    if not args.course:
+        args.course = course.find_all(db)
+    else:
+        args.course = course.match_courses(db, args.course)
+
+    for component_filepath in args.components:
+        if component_filepath.endswith("*"):
+            component_filepath = component_filepath[:-1]
+        if component_filepath.endswith("/"):
+            component_filepath = component_filepath[:-1]
+
+        if os.path.isdir(component_filepath) and not component_filepath.startswith("files"):
+            if component_filepath not in helpers.DIRS:
+                logging.error("Invalid directory: "+component_filepath)
+                continue
+
+            for child_path in os.listdir(component_filepath):
+                full_child_path = component_filepath + '/' + child_path
+                component = helpers_yaml.read(full_child_path)
+                if component and not isinstance(component, str):
+                    component.filename = full_child_path
+                    for course_ in args.course:
+                        print(f"removing {component} from {course_.name} ({course_.canvas_id})")
+                        component.remove(db, course_, args.dry_run)
+        else:
             for course_ in args.course:
                 if component_filepath == "syllabus.md":
                     logging.error("Don't remove your syllabus!")
@@ -101,83 +122,112 @@ def cmd_remove(db, args):
 
 def cmd_pull(db, args):
     if not args.components:
-        print("TODO: pull everything")
+        # pull everything
+        args.components = ["assignment_groups", "assignments", "files",
+                "pages", "quizzes", "modules"]
+
+    if not args.course:
+        args.course = course.find_all(db)
     else:
-        if not args.course:
-            args.course = course.find_all(db)
-        else:
-            args.course = course.match_courses(db, args.course)
+        args.course = course.match_courses(db, args.course)
 
-        for component_filepath in args.components:
-            local = {}
-            remote = {}
+    for component_filepath in args.components:
+        local = {}
+        remote = {}
 
-            if component_filepath.endswith("*"):
-                component_filepath = component_filepath[:-1]
-            if component_filepath.endswith("/"):
-                component_filepath = component_filepath[:-1]
+        if component_filepath.endswith("*"):
+            component_filepath = component_filepath[:-1]
+        if component_filepath.endswith("/"):
+            component_filepath = component_filepath[:-1]
 
-            if os.path.isdir(component_filepath):
-                if component_filepath not in helpers.DIRS:
-                    logging.error("Invalid directory: "+component_filepath)
-                    break
+        if os.path.isdir(component_filepath):
+            if component_filepath not in helpers.DIRS:
+                logging.error("Invalid directory: "+component_filepath)
+                break
 
-                # local versions
-                for child_path in os.listdir(component_filepath):
-                    if not component_filepath.startswith("files"):
-                        component = helpers_yaml.read(component_filepath + '/' +
-                                child_path)
-                        local[component.filename] = component
+            # local versions
+            for child_path in os.listdir(component_filepath):
+                if not component_filepath.startswith("files"):
+                    component = helpers_yaml.read(component_filepath + '/' +
+                            child_path)
+                    local[component.filename] = component
 
-                # request remote versions
-                for course_ in args.course:
-                    m = importlib.import_module("easel."+helpers.DIRS[component_filepath])
-                    print(f"pulling all {component_filepath} from {course_.name} ({course_.canvas_id})")
-                    for remote_comp in m.pull_all(db, course_, args.dry_run):
-                        if remote_comp.filename in remote:
-                            remote[remote_comp.filename].append(remote_comp)
-                        else:
-                            remote[remote_comp.filename] = [remote_comp]
-
-            elif os.path.isfile(component_filepath):
-                # local version
-                component = helpers_yaml.read(component_filepath)
-                component.filename = component_filepath
-                local[component.filename] = component
-
-                # request remote version(s)
-                for course_ in args.course:
-                    print(f"pulling {component} from {course_.name} ({course_.canvas_id})")
-                    remote_comp = component.pull(db, course_, args.dry_run)
+            # request remote versions
+            for course_ in args.course:
+                m = importlib.import_module("easel."+helpers.DIRS[component_filepath])
+                print(f"pulling all {component_filepath} from {course_.name} ({course_.canvas_id})")
+                for remote_comp in m.pull_all(db, course_, args.dry_run):
                     if remote_comp.filename in remote:
                         remote[remote_comp.filename].append(remote_comp)
                     else:
                         remote[remote_comp.filename] = [remote_comp]
 
-            else:
-                logging.error("Cannot find file: " + component_filepath)
+        elif os.path.isfile(component_filepath):
+            # local version
+            component = helpers_yaml.read(component_filepath)
+            component.filename = component_filepath
+            local[component.filename] = component
 
-            # TODO: merge remote into local
-            for remote_comp in remote:
-                components = remote[remote_comp]
-                if remote_comp in local:
-                    print("TODO: ask user to pick one")
-                if len(remote[remote_comp]) == 1:
-                    print(f"writing {components[0]} to {components[0].filename}")
-                    helpers_yaml.write(components[0].filename, components[0])
+            # request remote version(s)
+            for course_ in args.course:
+                print(f"pulling {component} from {course_.name} ({course_.canvas_id})")
+                remote_comp = component.pull(db, course_, args.dry_run)
+                if remote_comp.filename in remote:
+                    remote[remote_comp.filename].append(remote_comp)
                 else:
-                    logging.error("Too many remote options to handle right now...")
+                    remote[remote_comp.filename] = [remote_comp]
+
+        else:
+            logging.error("Cannot find file: " + component_filepath)
+
+        # TODO: merge remote into local
+        for remote_comp in remote:
+            components = remote[remote_comp]
+            if remote_comp in local:
+                logging.warn("Overwriting local copy of "
+                        "{components[0].filename}. In the future, we'll "
+                        "implement a merge workflow")
+            if len(remote[remote_comp]) == 1:
+                print(f"writing {components[0]} to {components[0].filename}")
+                helpers_yaml.write(components[0].filename, components[0])
+            else:
+                logging.error("Too many remote options to handle right now..."
+                        "Please manually specify a single course to pull from "
+                        "with the -c flag and later we'll implement a merge "
+                        "workflow")
 
 def cmd_push(db, args):
     if not args.components:
-        print("TODO: push everything")
-    else:
-        if not args.course:
-            args.course = course.find_all(db)
-        else:
-            args.course = course.match_courses(db, args.course)
+        # push everything
+        args.components = ["syllabus.md", "assignment_groups", "assignments",
+                "files", "pages", "quizzes", "modules"]
 
-        for component_filepath in args.components:
+    if not args.course:
+        args.course = course.find_all(db)
+    else:
+        args.course = course.match_courses(db, args.course)
+
+    for component_filepath in args.components:
+        if component_filepath.endswith("*"):
+            component_filepath = component_filepath[:-1]
+        if component_filepath.endswith("/"):
+            component_filepath = component_filepath[:-1]
+
+        if os.path.isdir(component_filepath) and not component_filepath.startswith("files"):
+            if component_filepath not in helpers.DIRS:
+                logging.error("Invalid directory: "+component_filepath)
+                continue
+
+            for child_path in os.listdir(component_filepath):
+                full_child_path = component_filepath + '/' + child_path
+                component = helpers_yaml.read(full_child_path)
+                if component and not isinstance(component, str):
+                    component.filename = full_child_path
+                    for course_ in args.course:
+                        print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
+                        component.push(db, course_, args.dry_run)
+
+        else:
             for course_ in args.course:
                 if component_filepath == "syllabus.md":
                     print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
