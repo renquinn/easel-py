@@ -98,6 +98,7 @@ class Quiz(component.Component):
                 "workflow_state", "submissions_download_url", "url",
                 "sis_assignment_id", "secure_params",
                 "require_lockdown_browser", "original_assignment_name",
+                "lockdown_browser_monitor_data",
                 "original_course_id", "original_quiz_id",
                 "original_assignment_id", "muted", "is_quiz_assignment",
                 "in_closed_grading_period", "external_tool_tag_attributes",
@@ -135,11 +136,15 @@ class Quiz(component.Component):
             fields['description'] = helpers.filter_canvas_html(fields['description'])
 
         extras = ['id', "quiz_id", "quiz_group_id", "assessment_question_id",
-                'migration_id', 'matches']
+                'migration_id', 'matches', "comments_html",
+                "correct_comments_html", "incorrect_comments_html",
+                "neutral_comments_html"]
         defaults = [("correct_comments", ""), ("incorrect_comments", ""),
-                ("neutral_comments", None), ("correct_comments_html", None),
-                ("incorrect_comments_html", None),
-                ("neutral_comments_html", None),
+                ("neutral_comments", ''),
+                ("neutral_comments", None),
+                ("comments", ''),
+                ("comments", None),
+                ('position', None),
                 ("variables", None),
                 ("formulas", None),
                 ("answer_tolerance", None),
