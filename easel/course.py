@@ -17,7 +17,7 @@ class Course:
         self.name = name
         self.code = code
         self.workflow_state = workflow_state
-        self.syllabus = syllabus
+        self.syllabus = helpers.filter_canvas_html(syllabus)
         if self.syllabus is None:
             self.syllabus = ""
 
