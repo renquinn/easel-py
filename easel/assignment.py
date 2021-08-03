@@ -109,7 +109,8 @@ class Assignment(component.Component):
                 "original_assignment_id", "muted", "is_quiz_assignment",
                 "in_closed_grading_period", "external_tool_tag_attributes",
                 "can_duplicate", "anonymous_peer_reviews",
-                "anonymous_instructor_annotations", "anonymize_students"]
+                "anonymous_instructor_annotations", "anonymize_students",
+                "important_dates"]
         defaults = [("automatic_peer_reviews", False),
                 ("grade_group_students_individually", False),
                 ("intra_group_peer_reviews", False),
