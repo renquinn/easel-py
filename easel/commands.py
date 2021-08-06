@@ -18,8 +18,17 @@ def cmd_login(db, args):
     if hostname.endswith("/"):
             hostname = hostname[:len(hostname)-1]
 
-    helpers.write_config(hostname, token, args.dry_run)
-    # TODO: should probably verify against the canvas api
+    if not helpers.write_config(hostname, token, args.dry_run):
+        return
+
+    # confirm user logged in correctly
+    resp = helpers.get("/api/v1/users/self")
+    if resp and isinstance(resp, dict) and "name" in resp and resp["name"]:
+        print("Found user:", resp['name'])
+    else:
+        logging.error("There was an issue logging you in. Check the hostname "
+                "of your canvas instance as well as your token.")
+        logging.debug(resp)
 
 def cmd_init(db, args):
     helpers.setup_directories(args.dry_run)
