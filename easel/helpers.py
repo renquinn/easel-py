@@ -61,14 +61,18 @@ def write_config(hostname, token, dry_run):
     config_file = home / ".easelrc" # https://docs.python.org/3.7/library/pathlib.html#operators
 
     config = {"hostname": hostname, "token": token}
-    try:
-        if dry_run:
-            print(f"DRYRUN - writing to file {config_file}")
-        else:
-            with open(config_file, 'x') as f:
-                f.write(json.dumps(config)) # TODO: 0644
-    except FileExistsError:
-        logging.error(f"Config file {config_file} exists")
+    if os.path.isfile(config_file):
+        resp = input(f"Config file {config_file} exists. Overwrite? [y/n] ")
+        if resp != "y":
+            print("Aborted.")
+            return False
+
+    if dry_run:
+        print(f"DRYRUN - writing {config} to file {config_file}")
+    else:
+        with open(config_file, 'w') as f:
+            f.write(json.dumps(config, indent=4))
+    return True
 
 def load_db():
     return tinydb.TinyDB(".easeldb", sort_keys=True, indent=4, separators=(',', ': '))
