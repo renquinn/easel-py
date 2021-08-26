@@ -15,14 +15,16 @@ class Page(component.Component):
 
     def __init__(self, url=None, title=None, body=None, published=None,
             front_page=None, todo_date=None, editing_roles=None,
-            notify_of_update=None, filename=""):
+            notify_of_update=None, filename="", student_todo_at=None):
         super().__init__(create_path=PAGES_PATH, update_path=PAGE_PATH,
                 db_table=TABLE, canvas_wrapper=WRAPPER, filename=filename)
         self.url = url
         self.title = title
         self.published = published
         self.front_page = front_page
-        self.todo_date = todo_date
+        self.student_todo_at = todo_date
+        if student_todo_at:
+            self.student_todo_at = student_todo_at
         self.editing_roles = editing_roles
         self.notify_of_update = notify_of_update
         if body:
