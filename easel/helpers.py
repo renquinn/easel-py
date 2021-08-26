@@ -158,7 +158,10 @@ def do_request(path, params, method, upload=None, dry_run=False):
                     logging.debug(json.dumps(results, sort_keys=True, indent=4))
                     if 'errors' in results:
                         for err in results['errors']:
-                            logging.error("Canvas Error: " + err.get('message'))
+                            if isinstance(err, dict):
+                                logging.error("Canvas Error: " + err.get('message'))
+                            else:
+                                logging.error("Canvas Error: " + str(err))
                 else:
                     # the last page
                     r = resp.json()
