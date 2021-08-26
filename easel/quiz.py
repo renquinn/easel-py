@@ -109,8 +109,8 @@ class Quiz(component.Component):
                 "quiz_reports_url", "quiz_statistics_url",
                 "message_students_url", "section_count",
                 "quiz_submission_versions_html_url", "assignment_id",
-                "has_access_code", "migration_id"
-                ]
+                "has_access_code", "migration_id",
+                "important_dates"]
         defaults = [("quiz_type", "assignment"),
                 ("allowed_attempts", -1),
                 ("scoring_policy", "keep_highest"),
