@@ -64,6 +64,15 @@ def main():
             "component(s) to remove")
     parser_remove.set_defaults(func=commands.cmd_remove)
 
+    ## md preview
+    parser_md = subparsers.add_parser("md", help="preview the relevant text "
+            "field of the given component(s) converted to html")
+    parser_md.add_argument(component_arg, nargs="*", help="the specific "
+            "component(s) to convert to html")
+    parser_md.set_defaults(func=commands.cmd_md)
+
+    ###################################
+
     args = parser.parse_args()
 
     if args.api:
