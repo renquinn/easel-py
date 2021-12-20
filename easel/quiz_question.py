@@ -28,7 +28,13 @@ class QuizQuestion(component.Component):
                 canvas_wrapper=WRAPPER, filename=filename)
         self.question_name=question_name
         if question_text:
-            self.question_text = helpers.md2html(question_text.strip())
+            question_text = question_text.strip()
+            question_html = helpers.md2html(question_text)
+            # TODO
+            # python-markdown does not support attribute lists on tables but
+            # the default table in canvas is hard to read. This solves that as
+            # long as we always want the same formatting on tables.
+            self.question_text = question_html.replace("<table>", "<table class=\"table table-striped table-bordered\">")
         else:
             self.question_text = None
         self.id = id
@@ -45,9 +51,14 @@ class QuizQuestion(component.Component):
         self.text_after_answers=text_after_answers
         self.answers=answers
         for answer in self.answers:
-            answer_text = answer.get("answer_text", "")
-            if answer_text and isinstance(answer_text, str):
-                answer["answer_text"] = answer_text.replace('\n', ' ').strip()
+            if 'answer_text' in answer:
+                answer_text = answer.get("answer_text", "")
+                if answer_text and isinstance(answer_text, str):
+                    answer["answer_text"] = answer_text.replace('\n', ' ').strip()
+            if 'answer_html' in answer:
+                answer['answer_html'] = helpers.md2html(answer['answer_html'])
+            if 'comments_html' in answer:
+                answer['comments_html'] = helpers.md2html(answer['comments_html'])
 
     def __eq__(self, other):
         return (self.id == other.id and
@@ -73,6 +84,14 @@ class QuizQuestion(component.Component):
                 f"question_type={self.question_type}, " \
                 f"points_possible={self.points_possible}, "\
                 f"answers_count={len(self.answers)})"
+
+    def md(self):
+        out = self.question_text
+        for answer in self.answers:
+            for key in ['answer_html', 'answer_text']:
+                if key in answer:
+                    out += "\n- A: " + answer[key]
+        return out
 
     def format_create_path(self, db, *path_args):
         """2 args -> course_id, quiz_id"""
