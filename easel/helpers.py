@@ -51,8 +51,10 @@ def filter_canvas_html(html):
     return html
 
 def md2html(mdtext):
-    extensions = ['fenced_code', 'codehilite', 'tables']
-    return markdown.markdown(mdtext, extensions=extensions)
+    extensions = ['fenced_code', 'codehilite', 'tables', 'attr_list']
+    config = {'codehilite': {'noclasses': True}}
+    return markdown.markdown(mdtext, extensions=extensions,
+            extension_configs=config)
 
 def write_config(hostname, token, dry_run):
     home = Path.home()
