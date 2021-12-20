@@ -23,6 +23,7 @@ DIRS = { # maps a directory name to its easel module name
         "pages": "page",
         "quiz_questions": "quiz_question",
         "quizzes": "quiz",
+        "local": "",
         }
 
 def isurl(url):
