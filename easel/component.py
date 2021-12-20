@@ -212,12 +212,16 @@ class Component:
             if "errors" in resp:
                 print(f"failed to update the component {found}")
                 for error in resp['errors']:
-                    if "does not exist" in error['message']:
-                        print("The component was deleted in "
-                        "canvas without us knowing about it. You should remove"
-                        " the component here and then try pushing it again.")
+                    if isinstance(error, dict):
+                        if "does not exist" in error['message']:
+                            print("The component was deleted in canvas "
+                                    "without us knowing about it. You should "
+                                    "remove the component here and then try "
+                                    "pushing it again.")
+                        else:
+                            print("CANVAS ERROR:", error['message'])
                     else:
-                        print("CANVAS ERROR:", error['message'])
+                        print("CANVAS ERROR:", error)
 
             if dry_run:
                 print(f"DRYRUN - saving the component {found}")
