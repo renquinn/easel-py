@@ -255,3 +255,36 @@ def cmd_push(db, args):
                         # not a yaml file so assume it's a file/dir to upload
                         files.push(db, course_, component_filepath,
                                 args.hidden, args.dry_run)
+
+def cmd_md(db, args):
+    if not args.components:
+        args.components = ["syllabus.md", "assignment_groups", "assignments",
+                "files", "pages", "quizzes", "modules"]
+
+    for component_filepath in args.components:
+        if component_filepath.endswith("*"):
+            component_filepath = component_filepath[:-1]
+        if component_filepath.endswith("/"):
+            component_filepath = component_filepath[:-1]
+
+        if os.path.isdir(component_filepath) and not component_filepath.startswith("files"):
+            if component_filepath not in helpers.DIRS:
+                logging.error("Invalid directory: "+component_filepath)
+                continue
+
+            for child_path in os.listdir(component_filepath):
+                full_child_path = component_filepath + '/' + child_path
+                component = helpers_yaml.read(full_child_path)
+                print(component.md())
+        else:
+            if component_filepath == "syllabus.md":
+                f = open("syllabus.md")
+                print(helpers.md2html(f.read()))
+                f.close()
+            else:
+                component = helpers_yaml.read(component_filepath)
+                if isinstance(component, list):
+                    for obj in component:
+                        print("\n\n*****\n", obj.md())
+                else:
+                    print(component.md())
