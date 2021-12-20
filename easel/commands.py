@@ -236,6 +236,10 @@ def cmd_push(db, args):
                         print(f"pushing {component} to {course_.name} ({course_.canvas_id})")
                         component.push(db, course_, args.dry_run)
 
+        elif component_filepath.startswith("files"):
+            for course_ in args.course:
+                files.push(db, course_, component_filepath, args.hidden,
+                        args.dry_run)
         else:
             for course_ in args.course:
                 if component_filepath == "syllabus.md":
