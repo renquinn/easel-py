@@ -28,6 +28,7 @@ class Assignment(component.Component):
             grade_group_students_individually=None, rubric=None,
             rubric_settings=None, position=None, description=None,
             free_form_criterion_comments=None, assignment_group=None,
+            notify_of_update=None,
             filename=""):
         super().__init__(create_path=ASSIGNMENTS_PATH,
                 update_path=ASSIGNMENT_PATH, db_table=ASSIGNMENTS_TABLE,
@@ -60,6 +61,7 @@ class Assignment(component.Component):
             self.description = helpers.md2html(description.strip())
         else:
             self.description = description
+        self.notify_of_update = notify_of_update
         # easel-managed attrs
         # local variable has to be called assignment_group (clashes with module
         # name) to match the yaml and Canvas response
