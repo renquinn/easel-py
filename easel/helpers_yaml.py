@@ -43,7 +43,7 @@ def construct_node(loader, node, class_):
             seq.append(construct_node(loader, subnode, class_))
         return seq
     elif isMappingNode(node):
-        return class_(**loader.construct_mapping(node))
+        return class_(**loader.construct_mapping(node, deep=True))
     elif isScalarNode(node):
         return class_(loader.construct_scalar(node))
     else:
