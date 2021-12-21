@@ -17,17 +17,36 @@ pip install -e .
 ## Usage
 
 When connected to a Canvas course, easel will read in a yaml file and create the
-corresponding component in Canvas on that course. Currently, easel assumes you
-will run its command from the root of your course directory (where the component
+corresponding component in Canvas on that course. Currently, easel requires you
+to run its commands from the root of your course directory (where the component
 subdirectories are located). This is where easel will initialize its database:
 `.easeldb`.
 
-First, tell easel about your Canvas instance. Then, initialize easel and add a
-course or courses. From there, you can create yaml files describing your course
-content and push them to your course. For each of these operations, refer to
-their detailed description and usage below.
+### Getting Started
 
-## Operations
+For each of these operations, refer to their detailed description and usage
+below.
+
+1. Tell easel about your Canvas instance (only needs to be run once):
+    `easel login <canvas_base_url> <api_token>`
+2. Initialize easel in a course-specific directory: `easel init`
+3. Add a course or courses (i.e., sections):
+    `easel course add <canvas_course_url>`
+4. Create yaml files describing your course content and push them to your
+   course: `easel push [component_filepath ...]`
+
+Easel makes it easy to not have to start from scratch by first pulling the
+material from a previous course and pushing it to a new course:
+
+1. Tell easel about your Canvas instance:
+    `easel login <canvas_base_url> <api_token>`
+2. Initialize easel in a course-specific directory: `easel init`
+3. Add the previous course: `easel course add <previous_canvas_course_url>`
+4. Pull everything from it: `easel pull`
+5. Add the new course: `easel course add <new_canvas_course_url>`
+6. Push everything to the new course: `easel --course <new_course_id> push`
+
+## Command Reference
 
 ### Login
 
@@ -81,31 +100,22 @@ List all Canvas courses that are tracked in the database.
 
 ### Push
 
-```
-easel push
-```
-
 Reads in and pushes a specific component (or multiple components) to the
 configured courses. A push reads the information of each component stored
 locally and for each one, makes a POST or PUT request to Canvas, depending on
 whether you are creating or updating the component in the Canvas course.
 
-Works for the following components:
+```
+easel push
+```
 
-- assignments
-- assignment groups
-- course syllabus
-- external tools
-- modules
-- pages
-- quizzes
-- files
-    - Files placed in the `files` directory will be pushed as they are (ignoring
-      the `files` parent directory).
-    - Supports multiple filename arguments and wildcards for batch pushing.
-    - Use the `--hidden` flag to unpublish the file(s) as hidden when pushed (by
-      default canvas publishes files when you upload them).
-    - When pushing a directory, `easel` will push all of its child files.
+or to push to a specific course:
+
+```
+easel --course <course_id> push
+```
+
+To push a specific component or components:
 
 ```
 easel push [component_filepath ...]
@@ -116,6 +126,17 @@ E.g.,
 ```
 easel push pages/lesson-1.yaml
 ```
+
+Notes on pushing files:
+
+- Files placed in the `files` directory will be pushed as they are (ignoring
+  the `files` parent directory).
+- Supports multiple filename arguments and wildcards for batch pushing.
+- Use the `--hidden` flag to unpublish the file(s) as hidden when pushed (by
+  default canvas publishes files when you upload them).
+- When pushing a directory, `easel` will push all of its child files.
+
+Course filtering:
 
 Use the `--course` flag (alternatively `-c`) to specify a subset of your
 courses. I prefer to use the section number to identify a course. For example,
@@ -131,19 +152,6 @@ Remove a given component(s) from the canvas course. This does not delete the
 yaml file or the local database entry for the component. But it will remove the
 database record which tracks that component in Canvas (i.e., it's Canvas ID).
 
-Works for the following components:
-
-- assignments
-- assignment groups
-- external tools
-- modules
-- pages
-- quizzes
-- files
-    - Supports multiple filename arguments and wildcards for batch removing.
-    - When removing a directory, `easel` will remove all of its child files
-      (however the empty directory will remain in Canvas).
-
 ```
 easel remove [component_filepath ...]
 ```
@@ -153,6 +161,12 @@ E.g.,
 ```
 easel remove pages/lesson-1.yaml
 ```
+
+Note for files:
+
+- Supports multiple filename arguments and wildcards for batch removing.
+- When removing a directory, `easel` will remove all of its child files (however
+  the empty directory will remain in Canvas).
 
 ## File Structure
 
@@ -165,171 +179,20 @@ component has some associated body/description content, it should be included in
 markdown as part of the component's yaml configuration using a multiline string
 (see the `examples` directory for examples).
 
+## Component Fields Reference
+
+- [Assignments](docs/component_fields/assignment.md)
+- [Assignment Groups](docs/component_fields/assignment_group.md)
+- [External Tools](docs/component_fields/external_tool.md)
+- [Modules](docs/component_fields/module.md)
+- [Pages](docs/component_fields/page.md)
+- [Quizzes](docs/component_fields/quiz.md)
+
 ## Dates
 
 When specifying dates (e.g., due_at, unlock_at, lock_at),
 [ISO 8601 format](https://en.wikipedia.org/wiki/ISO_8601) should be used. This
 is temporary until I can build out an internal date management system.
-
-## Recognized Component Fields
-
-### Assignments
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/assignments.html)
-
-- name
-- published
-- grading_type
-- points_possible
-- submission_types
-- allowed_extensions
-- external_tool_tag_attributes
-- allowed_attempts
-- due_at
-- unlock_at
-- lock_at
-- peer_reviews
-- automatic_peer_reviews
-- peer_reviews_assign_at
-- intra_group_peer_reviews
-- anonymous_submissions
-- omit_from_final_grade
-- use_rubric_for_grading
-- assignment_group_id
-- grade_group_students_individually
-- rubric
-- rubric_settings
-- position
-- description
-
-easel-specific fields
-
-- assignment_group (the name of the assignment group, will be resolved to
-  assignment_group_id)
-
-### Assignment Groups
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/assignment_groups.html)
-
-- name (must be unique)
-- position
-- group_weight
-
-NOTE: when removing an assignment group, it will delete the assignments
-associated with that group as well.
-
-### External Tools
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/external_tools.html)
-
-- name
-- consumer_key
-- shared_secret
-- config_type
-- config_url
-
-### Modules
-
-[(module field descriptions)](https://canvas.instructure.com/doc/api/modules.html)
-
-- name
-- published
-- position
-- unlock_at
-- require_sequential_progress
-- prerequisite_module_ids
-- items (a list of module item objects, see below)
-
-Each module item can have the following fields:
-
-- item
-    - this is a local filename that represents the yaml file for the item you
-      want to add to the module
-    - if you don't specify any other option for this item, you can just use the
-      name of the file as a string without creating a yaml object for it
-    - only Pages and Assignments work for now (see TODO section below)
-- indent
-- new_tab
-
-### Pages
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/pages.html)
-
-- url
-- title
-- body
-- published
-- front_page
-- todo_date
-- editing_roles
-- notify_of_update
-
-### Quizzes
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/quizzes.html)
-
-
-- title
-- published
-- description
-- assignment_group (the name of the assignment group)
-- points_possible
-- allowed_attempts
-- due_at
-- unlock_at
-- lock_at
-- quiz_type
-- time_limit
-- shuffle_answers
-- hide_results
-- show_correct_answers
-- show_correct_answers_last_attempt
-- show_correct_answers_at
-- hide_correct_answers_at
-- scoring_policy
-- one_question_at_a_time
-- cant_go_back
-- access_code
-- ip_filter
-- one_time_results
-- only_visible_to_overrides
-- anonymous_submissions
-- description
-- quiz_questions (a list of quiz_question objects, see below)
-
-Each quiz question can have the following fields:
-
-[(field descriptions)](https://canvas.instructure.com/doc/api/quiz_questions.html)
-
-- question_name
-- question_type
-- question_text
-- points_possible
-- position
-- correct_comments
-- incorrect_comments
-- neutral_comments
-- matching_answer_incorrect_matches
-- text_after_answers
-- answers (a list of answer objects, see below)
-
-Each quiz question answer can have the following fields:
-
-- answer_text
-- answer_weight
-- blank_id (for fill in multiple blanks or multiple dropdowns question questions)
-- answer_match_left (for matching questions)
-- answer_match_right (for matching questions)
-- numerical_answer_type (for numerical questions), possible values:
-    - exact_answer
-    - range_answer
-    - precision_answer
-- answer_exact (for numerical questions)
-- answer_error_margin (for numerical questions)
-- answer_range_start (for numerical questions)
-- answer_range_end (for numerical questions)
-- answer_approximate (for numerical questions)
-- answer_precision (for numerical questions)
 
 ## TODO
 
