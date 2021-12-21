@@ -114,3 +114,15 @@ def push_syllabus(db, course_id, dry_run):
             print(f"DRYRUN - pushing syllabus")
         else:
             helpers.put(COURSE_PATH.format(course_id), c)
+
+def update_grading_scheme(db, course_id, grading_scheme_id, dry_run):
+    c = {
+            "course": {
+                "grading_standard_id": grading_scheme_id,
+                "apply_assignment_group_weights": True
+            }
+        }
+    if dry_run:
+        print(f"DRYRUN - updating grading scheme {grading_scheme_id} for course {course_id}")
+    else:
+        helpers.put(COURSE_PATH.format(course_id), c)

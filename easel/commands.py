@@ -3,6 +3,7 @@ import logging
 import os.path
 import sys
 
+from easel import canvas_id
 from easel import course
 from easel import files
 from easel import helpers
@@ -245,6 +246,19 @@ def cmd_push(db, args):
                 if component_filepath == "syllabus.md":
                     print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
                     course.push_syllabus(db, course_.canvas_id, args.dry_run)
+                elif component_filepath == "grading_scheme.yaml":
+                    print(f"pushing grading scheme to {course_.name} ({course_.canvas_id})")
+                    cid = canvas_id.CanvasID(component_filepath, course_.canvas_id)
+                    cid.find_id(db)
+                    if cid.canvas_id == "":
+                        # Don't try to create a scheme if it doesn't already
+                        # exist. Ideally, we update the scheme but Canvas
+                        # apparently doesn't allow for that.
+                        component = helpers_yaml.read(component_filepath)
+                        component.push(db, course_, args.dry_run)
+                        cid.find_id(db)
+                    course.update_grading_scheme(db, course_.canvas_id,
+                            cid.canvas_id, args.dry_run)
                 else:
                     component = helpers_yaml.read(component_filepath)
                     if component and not isinstance(component, str):
