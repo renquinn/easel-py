@@ -4,6 +4,7 @@ import yaml
 from easel import assignment
 from easel import assignment_group
 from easel import external_tool
+from easel import grading_scheme
 from easel import module
 from easel import page
 from easel import quiz
@@ -13,6 +14,7 @@ from easel import quiz_question
 yaml.add_constructor("!Assignment", assignment.constructor)
 yaml.add_constructor("!AssignmentGroup", assignment_group.constructor)
 yaml.add_constructor("!ExternalTool", external_tool.constructor)
+yaml.add_constructor("!GradingScheme", grading_scheme.constructor)
 yaml.add_constructor("!Module", module.constructor)
 yaml.add_constructor("!Page", page.constructor)
 yaml.add_constructor("!Quiz", quiz.constructor)

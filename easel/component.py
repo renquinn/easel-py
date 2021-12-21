@@ -251,6 +251,7 @@ def build(class_name, dictionary):
     from easel import assignment_group
     from easel import assignment
     from easel import external_tool
+    from easel import grading_scheme
     from easel import module
     from easel import module_item
     from easel import page
@@ -259,6 +260,7 @@ def build(class_name, dictionary):
             "Assignment": assignment.Assignment,
             "AssignmentGroup": assignment_group.AssignmentGroup,
             "ExternalTool": external_tool.ExternalTool,
+            "GradingScheme": grading_scheme.GradingScheme,
             "Module": module.Module,
             "ModuleItem": module_item.ModuleItem,
             "Page": page.Page,
