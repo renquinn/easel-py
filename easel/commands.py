@@ -209,8 +209,9 @@ def cmd_pull(db, args):
 def cmd_push(db, args):
     if not args.components:
         # push everything
-        args.components = ["syllabus.md", "assignment_groups", "assignments",
-                "files", "pages", "quizzes", "modules"]
+        args.components = ["syllabus.md", "grading_scheme.yaml",
+                "assignment_groups", "assignments", "files", "pages",
+                "quizzes", "modules"]
 
     if not args.course:
         args.course = course.find_all(db)
