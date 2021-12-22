@@ -243,6 +243,10 @@ def cmd_push(db, args):
                 files.push(db, course_, component_filepath, args.hidden,
                         args.dry_run)
         else:
+            if not os.path.isfile(component_filepath):
+                logging.error("Cannot find file: " + component_filepath)
+                continue
+
             for course_ in args.course:
                 if component_filepath == "syllabus.md":
                     print(f"pushing syllabus to {course_.name} ({course_.canvas_id})")
