@@ -8,6 +8,7 @@ from easel import course
 from easel import files
 from easel import helpers
 from easel import helpers_yaml
+from easel import navigation_tab
 
 def cmd_login(db, args):
     hostname = args.hostname
@@ -181,6 +182,19 @@ def cmd_pull(db, args):
             # request remote version(s)
             for course_ in args.course:
                 print(f"pulling {component} from {course_.name} ({course_.canvas_id})")
+                remote_comp = component.pull(db, course_, args.dry_run)
+                if remote_comp.filename in remote:
+                    remote[remote_comp.filename].append(remote_comp)
+                else:
+                    remote[remote_comp.filename] = [remote_comp]
+
+        elif component_filepath in ["navigation", "navigation.yaml"]:
+            # We don't have a local version at this point so only request
+            # remote version(s). If we have a local version, the previous if
+            # clause will take care of it.
+            for course_ in args.course:
+                print(f"pulling navigation tabs from {course_.name} ({course_.canvas_id})")
+                component = navigation_tab.NavigationTabs()
                 remote_comp = component.pull(db, course_, args.dry_run)
                 if remote_comp.filename in remote:
                     remote[remote_comp.filename].append(remote_comp)
