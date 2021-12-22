@@ -247,6 +247,16 @@ class Component:
         remote.filename = self.filename
         return remote
 
+    def yaml(self):
+        """Most components nicely fit the representation of a dictionary for
+        yaml. However, in case a component needs a different representation
+        (e.g., NavigationTabs is a list), override this function to produce
+        custom yaml for use in the helpers_yaml.write() function."""
+        fields = dict(self)
+        if self.canvas_wrapper:
+            fields = fields[self.canvas_wrapper]
+        return yaml.dump(fields)
+
 def build(class_name, dictionary):
     from easel import assignment_group
     from easel import assignment
