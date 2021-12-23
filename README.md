@@ -179,13 +179,14 @@ component has some associated body/description content, it should be included in
 markdown as part of the component's yaml configuration using a multiline string
 (see the `examples` directory for examples).
 
-## Component Fields Reference
+## Individual Component References
 
 - [Assignments](docs/component_fields/assignment.md)
 - [Assignment Groups](docs/component_fields/assignment_group.md)
 - [External Tools](docs/component_fields/external_tool.md)
 - [Course Grading Scheme](docs/component_fields/course_grading_scheme.md)
 - [Modules](docs/component_fields/module.md)
+- [Navigation Tabs](docs/component_fields/navigation.md)
 - [Pages](docs/component_fields/page.md)
 - [Quizzes](docs/component_fields/quiz.md)
 

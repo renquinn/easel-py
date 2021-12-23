@@ -224,8 +224,8 @@ def cmd_push(db, args):
     if not args.components:
         # push everything
         args.components = ["syllabus.md", "grading_scheme.yaml",
-                "assignment_groups", "assignments", "files", "pages",
-                "quizzes", "modules"]
+                "navigation.yaml", "assignment_groups", "assignments", "files",
+                "pages", "quizzes", "modules"]
 
     if not args.course:
         args.course = course.find_all(db)
@@ -278,6 +278,9 @@ def cmd_push(db, args):
                         cid.find_id(db)
                     course.update_grading_scheme(db, course_.canvas_id,
                             cid.canvas_id, args.dry_run)
+                elif component_filepath == "navigation.yaml":
+                    print(f"pushing navigation tabs to {course_.name} ({course_.canvas_id})")
+                    navigation_tab.push(db, course_, args.dry_run)
                 else:
                     component = helpers_yaml.read(component_filepath)
                     if component and not isinstance(component, str):
