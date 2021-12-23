@@ -40,7 +40,7 @@ def main():
     ## course commands
     parser_course = subparsers.add_parser("course", help="course management "
             "commands")
-    parser_course.add_argument("subcommand", choices=["list", "add", "remove"])
+    parser_course.add_argument("subcommand", choices=["list", "add", "remove", "publish"])
     parser_course.add_argument("subcommand_argument", nargs="?")
     parser_course.set_defaults(func=commands.cmd_course)
 

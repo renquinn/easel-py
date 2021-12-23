@@ -126,3 +126,10 @@ def update_grading_scheme(db, course_id, grading_scheme_id, dry_run):
         print(f"DRYRUN - updating grading scheme {grading_scheme_id} for course {course_id}")
     else:
         helpers.put(COURSE_PATH.format(course_id), c)
+
+def publish(course_id, dry_run):
+    c = {"offer": True}
+    if dry_run:
+        print(f"DRYRUN - publishing course {course_id}")
+    else:
+        helpers.put(COURSE_PATH.format(course_id), c)

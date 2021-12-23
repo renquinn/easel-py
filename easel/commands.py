@@ -49,6 +49,8 @@ def cmd_course(db, args):
         else:
             print("remove subcommand requires a search term for the course url"
                     " to be removed")
+    elif args.subcommand == "publish":
+        cmd_course_publish(db, args)
 
 def cmd_course_list(db):
     courses = course.find_all(db)
@@ -86,6 +88,15 @@ def cmd_course_remove(db, course_search, dry_run):
     else:
         courses[0].remove(db)
         print("removed course", courses[0].name)
+
+def cmd_course_publish(db, args):
+    if not args.course:
+        args.course = course.find_all(db)
+    else:
+        args.course = course.match_courses(db, args.course)
+
+    for course_ in args.course:
+        course.publish(course_.canvas_id, args.dry_run)
 
 def cmd_remove(db, args):
     if not args.components:
