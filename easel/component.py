@@ -1,5 +1,6 @@
 import logging
 import tinydb
+import yaml
 
 from easel import canvas_id
 from easel import course
