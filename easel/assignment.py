@@ -28,7 +28,7 @@ class Assignment(component.Component):
             grade_group_students_individually=None, rubric=None,
             rubric_settings=None, position=None, description=None,
             free_form_criterion_comments=None, assignment_group=None,
-            notify_of_update=None,
+            notify_of_update=None, annotatable_attachment_id=None,
             filename=""):
         super().__init__(create_path=ASSIGNMENTS_PATH,
                 update_path=ASSIGNMENT_PATH, db_table=ASSIGNMENTS_TABLE,
