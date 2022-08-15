@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 from tqdm import tqdm
 import urllib.parse
+import yaml
 
 import markdown
 import requests
@@ -25,6 +26,10 @@ DIRS = { # maps a directory name to its easel module name
         "quizzes": "quiz",
         "local": "",
         }
+
+def get_global_template_fields():
+    with open("template_fields.yaml") as f:
+        return yaml.load(f)
 
 def isurl(url):
     # requires protocol in addition to hostname
@@ -50,9 +55,10 @@ def filter_canvas_html(html):
             html = html.replace(st, '')
     return html
 
-def md2html(mdtext):
+def md2html(mdtext, args={}):
     extensions = ['fenced_code', 'codehilite', 'tables', 'attr_list']
     config = {'codehilite': {'noclasses': True}}
+    mdtext = mdtext.format(**args)
     return markdown.markdown(mdtext, extensions=extensions,
             extension_configs=config)
 

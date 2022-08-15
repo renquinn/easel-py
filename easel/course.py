@@ -104,16 +104,66 @@ def pull(db, course_id):
     return Course(response["id"], response["name"], response["course_code"],
             response["workflow_state"], response["syllabus_body"])
 
-def push_syllabus(db, course_id, dry_run):
+def format_syllabus(db, course_id):
     with open("syllabus.md") as f:
-        c = {"course": {
-            "syllabus_body": helpers.md2html(f.read()),
+        text = f.read()
+    # format fields from three different sources into syllabus:
+
+    # 1. fields from syllabus meta data
+    md_fields = {}
+    lines = text.split('\n')
+    delimeter_count = lines.count('---')
+    if delimeter_count > 1:
+        # parse metadata
+        end_metadata = lines.index('---', 2)
+        metadata = '\n'.join(lines[1:end_metadata])
+        text = '\n'.join(lines[end_metadata+1:])
+        # convert metadata from yaml
+        '''
+        Example format:
+        ---
+        custom_fields:
+            677659:
+                meeting_time: MW 12:00-1:15 pm
+                room: Smith 107
+                final_exam: Dec 14, 11 am
+            647101:
+                meeting_time: MWF 11:00-11:50 pm
+                room: Smith 107
+                final_exam: Dec 12, 11 am
+        ---
+        '''
+        import yaml
+        md_fields = yaml.load(metadata)['custom_fields']
+        if course_id in md_fields:
+            # TODO: I'm not a fan of this way to organize fields for multiple
+            # sections in the yaml (see example format above)
+            md_fields = md_fields[course_id]
+
+    # 2. course-specific fields
+    course_fields = md_fields
+    c = find(db, course_id)[0]
+    # TODO: Canvas may change the format of these fields in the future
+    course_fields['code'] = c.code[:7]
+    course_fields['crn'] = c.name[-6:-1]
+    course_fields['semester'] = ' '.join(c.name.split()[1:3])
+
+    # 3. global fields
+    fields = helpers.get_global_template_fields()
+    fields.update(course_fields)
+    return helpers.md2html(text, fields)
+
+def push_syllabus(db, course_id, dry_run):
+    formatted = format_syllabus(db, course_id)
+    c = {"course": {
+            "syllabus_body": formatted,
             "apply_assignment_group_weights": True
-            }}
-        if dry_run:
-            print(f"DRYRUN - pushing syllabus")
-        else:
-            helpers.put(COURSE_PATH.format(course_id), c)
+        }}
+    if dry_run:
+        print(f"DRYRUN - pushing syllabus")
+        print(formatted)
+    else:
+        helpers.put(COURSE_PATH.format(course_id), c)
 
 def update_grading_scheme(db, course_id, grading_scheme_id, dry_run):
     c = {
