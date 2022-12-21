@@ -47,3 +47,11 @@ def find_by_prefix(db, course_id, prefix):
     for result in results:
         if result:
             yield CanvasID(**result)
+
+def find_all_course_components(db, course_id):
+    table = db.table(TABLE)
+    CID = tinydb.Query()
+    results = table.search(CID.course_id == course_id)
+    for result in results:
+        if result:
+            yield CanvasID(**result)

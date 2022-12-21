@@ -27,13 +27,28 @@ class Page(component.Component):
             self.student_todo_at = student_todo_at
         self.editing_roles = editing_roles
         self.notify_of_update = notify_of_update
-        if body:
-            self.body = helpers.md2html(body.strip())
-        else:
-            self.body = body
+        self.body = body
 
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"
+
+    def preprocess(self, db, course_, dry_run):
+        if self.body:
+            body = self.body
+
+            # format fields
+            fields = {}
+            # 1. course id
+            fields["course_id"] = course_.canvas_id
+            # 2. all assignment/quiz ids ("{root_filename}" => canvas_id)
+            # root_filename: w/o parent dirs and extension
+            for cid in canvas_id.find_all_course_components(db, course_.canvas_id):
+                if '/' in cid.filename:
+                    filename = cid.filename.split('/')[1].split('.')[0]
+                    fields[filename] = cid.canvas_id
+
+            body = body.format(**fields)
+            self.body = helpers.md2html(body.strip())
 
     @classmethod
     def build(cls, fields):
