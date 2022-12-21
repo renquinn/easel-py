@@ -147,6 +147,7 @@ def format_syllabus(db, course_id):
     course_fields['code'] = c.code[:7]
     course_fields['crn'] = c.name[-6:-1]
     course_fields['semester'] = ' '.join(c.name.split()[1:3])
+    course_fields['course_id'] = course_id
 
     # 3. global fields
     fields = helpers.get_global_template_fields()
