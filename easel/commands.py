@@ -292,6 +292,10 @@ def cmd_push(db, args):
                 elif component_filepath == "navigation.yaml":
                     print(f"pushing navigation tabs to {course_.name} ({course_.canvas_id})")
                     navigation_tab.push(db, course_, args.dry_run)
+                elif component_filepath == "course.yaml":
+                    print(f"updating course settings for {course_.name} ({course_.canvas_id})")
+                    settings = helpers_yaml.read("course.yaml")
+                    course.update_settings(db, course_.canvas_id, settings, args.dry_run)
                 else:
                     component = helpers_yaml.read(component_filepath)
                     if component and not isinstance(component, str):
