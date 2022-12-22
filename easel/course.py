@@ -101,8 +101,9 @@ def pull(db, course_id):
     params = {"include[]": "syllabus_body"}
     response = helpers.get(COURSE_PATH.format(course_id), params=params)
     response["canvas_id"] = response["id"]
-    return Course(response["id"], response["name"], response["course_code"],
-            response["workflow_state"], response["syllabus_body"])
+    response["code"] = response["course_code"]
+    response["syllabus"] = response["syllabus_body"]
+    return build(response)
 
 def format_syllabus(db, course_id):
     with open("syllabus.md") as f:
