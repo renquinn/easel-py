@@ -159,7 +159,7 @@ def push_syllabus(db, course_id, dry_run):
     formatted = format_syllabus(db, course_id)
     c = {"course": {
             "syllabus_body": formatted,
-            "apply_assignment_group_weights": True
+            "apply_assignment_group_weights": True # TODO: move to settings file
         }}
     if dry_run:
         print(f"DRYRUN - pushing syllabus")
@@ -171,12 +171,20 @@ def update_grading_scheme(db, course_id, grading_scheme_id, dry_run):
     c = {
             "course": {
                 "grading_standard_id": grading_scheme_id,
-                "apply_assignment_group_weights": True
+                "apply_assignment_group_weights": True # TODO: move to settings file
             }
         }
     if dry_run:
         print(f"DRYRUN - updating grading scheme {grading_scheme_id} for course {course_id}")
     else:
+        helpers.put(COURSE_PATH.format(course_id), c)
+
+def update_settings(db, course_id, settings, dry_run):
+    if dry_run:
+        print(f"DRYRUN - updating settings")
+        print(settings)
+    else:
+        c = {"course": settings}
         helpers.put(COURSE_PATH.format(course_id), c)
 
 def publish(course_id, dry_run):

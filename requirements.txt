@@ -1,5 +1,5 @@
-markdown
-pygments
+markdown==3.3.4
+pygments==2.11.2
 pyyaml
 requests
 tinydb

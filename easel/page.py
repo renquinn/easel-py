@@ -29,6 +29,10 @@ class Page(component.Component):
         self.notify_of_update = notify_of_update
         self.body = body
 
+    def preprocess(self, db, course_, dry_run):
+        if self.body:
+            self.body = helpers.md2html(self.body.strip())
+
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"
 
