@@ -2,7 +2,7 @@ import json
 import tinydb
 from tqdm import tqdm
 
-from easel import assignment_group
+from easel import assignment_group as assignment_group_ # see comment below on self.assignment_group
 from easel import canvas_id
 from easel import component
 from easel import course
@@ -57,10 +57,7 @@ class Assignment(component.Component):
         self.submission_types = submission_types
         self.unlock_at = unlock_at
         self.use_rubric_for_grading = use_rubric_for_grading
-        if description:
-            self.description = helpers.md2html(description.strip())
-        else:
-            self.description = description
+        self.description = description
         self.notify_of_update = notify_of_update
         # easel-managed attrs
         # local variable has to be called assignment_group (clashes with module
@@ -69,18 +66,20 @@ class Assignment(component.Component):
 
     def get_assignment_group_id(self, db, course_id):
         if self.assignment_group:
-            ags = db.table(assignment_group.ASSIGN_GROUPS_TABLE)
+            ags = db.table(assignment_group_.ASSIGN_GROUPS_TABLE)
             results = ags.search(tinydb.Query().name == self.assignment_group)
             if not results:
                 raise ValueError(f"failed to find AssignmentGroup called '{self.assignment_group}'")
             # assumes assignment group names will be unique
-            fname = assignment_group.AssignmentGroup(**dict(results[0])).filename
+            fname = assignment_group_.AssignmentGroup(**dict(results[0])).filename
             cid = canvas_id.CanvasID(fname, course_id)
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
     def preprocess(self, db, course_, dry_run):
-         self.get_assignment_group_id(db, course_.canvas_id)
+        self.get_assignment_group_id(db, course_.canvas_id)
+        if self.description:
+            self.description = helpers.md2html(self.description.strip())
 
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"
@@ -161,7 +160,7 @@ def pull(db, course_, assignment_id, dry_run):
             # we could look at all the local assignment group files if we
             # don't have a cid for it but chances are there isn't a file.
             # so might as well just go back to canvas and ask for it
-            agpath = assignment_group.ASSIGN_GROUP_PATH.format(course_id, agid)
+            agpath = assignment_group_.ASSIGN_GROUP_PATH.format(course_id, agid)
             r = helpers.get(agpath, dry_run=dry_run)
             if 'name' in r:
                 a['assignment_group'] = r['name']

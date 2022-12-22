@@ -27,10 +27,11 @@ class Page(component.Component):
             self.student_todo_at = student_todo_at
         self.editing_roles = editing_roles
         self.notify_of_update = notify_of_update
-        if body:
-            self.body = helpers.md2html(body.strip())
-        else:
-            self.body = body
+        self.body = body
+
+    def preprocess(self, db, course_, dry_run):
+        if self.body:
+            self.body = helpers.md2html(self.body.strip())
 
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"
