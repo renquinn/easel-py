@@ -59,10 +59,7 @@ class Quiz(component.Component):
         self.only_visible_to_overrides=only_visible_to_overrides
         self.anonymous_submissions=anonymous_submissions
         self.assignment_group_id=assignment_group_id
-        if description:
-            self.description = helpers.md2html(description.strip())
-        else:
-            self.description = None
+        self.description = description
         # easel-managed attrs
         # local variable has to be called assignment_group (clashes with module
         # title) to match the yaml and Canvas response
@@ -179,9 +176,11 @@ class Quiz(component.Component):
             self.assignment_group_id = cid.canvas_id
 
     def preprocess(self, db, course_, dry_run):
-         self.get_assignment_group_id(db, course_.canvas_id)
-         self.remember_published = self.published
-         self.published = False
+        if self.description:
+            self.description = helpers.md2html(self.description.strip())
+        self.get_assignment_group_id(db, course_.canvas_id)
+        self.remember_published = self.published
+        self.published = False
 
     def postprocess(self, db, course_, dry_run):
         course_id = course_.canvas_id
