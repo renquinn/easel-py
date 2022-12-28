@@ -98,41 +98,18 @@ class Assignment(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
-                'has_overrides', 'all_dates', 'course_id', 'html_url',
-                'submission_download_url', 'due_date_required',
-                'max_name_length', 'turnitin_enabled', 'vericite_enabled',
-                'turnitin_settings', 'peer_review_count', 'group_category_id',
-                'needs_grading_count', 'needs_grading_count_by_section',
-                'post_to_sis', 'integration_id', 'integration_data',
-                'has_submitted_submissions', 'grading_standard_id',
-                'unpublishable', 'only_visible_to_overrides',
-                'locked_for_user', 'lock_info', 'lock_explanation', 'quiz_id',
-                'discussion_topic', 'freeze_on_copy', 'frozen',
-                'frozen_attributes', 'submission', 'assignment_visibility',
-                'overrides', 'moderated_grading', 'grader_count',
-                'final_grader_id', 'grader_comments_visible_to_graders',
-                'graders_anonymous_to_graders',
-                'grader_names_visible_to_final_grader', 'anonymous_grading',
-                'post_manually', 'score_statistics', 'can_submit',
-                "workflow_state", "submissions_download_url", "url",
-                "sis_assignment_id", "secure_params",
-                "require_lockdown_browser", "original_assignment_name",
-                "original_course_id", "original_quiz_id",
-                "original_assignment_id", "muted", "is_quiz_assignment",
-                "in_closed_grading_period", "external_tool_tag_attributes",
-                "can_duplicate", "anonymous_peer_reviews",
-                "anonymous_instructor_annotations", "anonymize_students",
-                "important_dates"]
-        defaults = [("automatic_peer_reviews", False),
-                ("grade_group_students_individually", False),
-                ("intra_group_peer_reviews", False),
-                ("omit_from_final_grade", False),
-                ("peer_reviews", False)]
-        component.filter_fields(fields, extras, defaults)
-        if 'description' in fields:
-            fields['description'] = helpers.filter_canvas_html(fields['description'])
-        return Assignment(**fields)
+        defaults = {
+                "automatic_peer_reviews": False,
+                "grade_group_students_individually": False,
+                "intra_group_peer_reviews": False,
+                "omit_from_final_grade": False,
+                "peer_reviews": False,
+                }
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        filtered = component.filter_fields(fields, desired_fields, defaults)
+        if 'description' in filtered:
+            filtered['description'] = helpers.filter_canvas_html(filtered['description'])
+        return Assignment(**filtered)
 
 
 # Needed for custom yaml tag

@@ -39,13 +39,14 @@ class Module(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extras = ["id", "workflow_state", "items_count", "items_url", "state",
-                "completed_at", "publish_final_grade"]
-        defaults = [("require_sequential_progress", False),
-                ("prerequisite_module_ids", []),
-                ("unlock_at", "")]
-        component.filter_fields(fields, extras, defaults)
-        return Module(**fields)
+        defaults = {
+                "require_sequential_progress": False,
+                "prerequisite_module_ids": [],
+                "unlock_at": "",
+                }
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        filtered = component.filter_fields(fields, desired_fields, defaults)
+        return Module(**filtered)
 
     def postprocess(self, db, course_, dry_run):
         course_id = course_.canvas_id
