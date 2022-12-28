@@ -81,6 +81,18 @@ class Assignment(component.Component):
         if self.description:
             self.description = helpers.md2html(self.description.strip())
 
+    # TODO: originally, pulling a new component vs pulling an existing one to
+    # update it was a different operation. Since then, I've added extra
+    # processing to some of the operations for pulling a new component that I
+    # need to use that for updating now, which is why I wrote this function.
+    # Seems like this could use a better design to reuse some of the
+    # functionality while taking advantage of inheriting from the Component
+    # class as well.
+    def pull(self, db, course_, dry_run):
+        cid = canvas_id.CanvasID(self.filename, course_.canvas_id)
+        cid.find_id(db)
+        return pull(db, course_, cid.canvas_id, dry_run)[0]
+
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"
 
@@ -152,6 +164,7 @@ def pull(db, course_, assignment_id, dry_run):
             ag = helpers_yaml.read(agcid.filename)
             if ag:
                 a['assignment_group'] = ag.name
+                del a['assignment_group_id']
             else:
                 logging.error("failed to find the assignment group for "
                         f"the assignment group with id {agid}. Your "
@@ -164,6 +177,7 @@ def pull(db, course_, assignment_id, dry_run):
             r = helpers.get(agpath, dry_run=dry_run)
             if 'name' in r:
                 a['assignment_group'] = r['name']
+                del a['assignment_group_id']
             else:
                 logging.error("TODO: invalid response from canvas for "
                         "the assignment group: " + json.dumps(r, indent=4))
