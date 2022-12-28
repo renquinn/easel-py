@@ -27,8 +27,8 @@ class AssignmentGroup(component.Component):
     @classmethod
     def build(cls, fields):
         desired_fields = cls.__init__.__code__.co_varnames[1:]
-        filtered = component.filter_fields(fields, desired_fields)
-        return AssignmentGroup(**filtered)
+        component.filter_fields(fields, desired_fields)
+        return AssignmentGroup(**fields)
 
 def pull_all(db, course_, dry_run):
     r = helpers.get(ASSIGN_GROUPS_PATH.format(course_.canvas_id),

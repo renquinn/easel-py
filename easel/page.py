@@ -43,10 +43,10 @@ class Page(component.Component):
                 "editing_roles": "teachers",
                 }
         desired_fields = cls.__init__.__code__.co_varnames[1:]
-        filtered = component.filter_fields(fields, desired_fields, defaults)
-        if 'body' in filtered:
-            filtered['body'] = helpers.filter_canvas_html(filtered['body'])
-        return Page(**filtered)
+        component.filter_fields(fields, desired_fields, defaults)
+        if 'body' in fields:
+            fields['body'] = helpers.filter_canvas_html(fields['body'])
+        return Page(**fields)
 
 # Needed for custom yaml tag
 def constructor(loader, node):

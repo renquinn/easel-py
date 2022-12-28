@@ -285,21 +285,18 @@ def gen_filename(dir_, name):
 def filter_fields(fields, fields_to_keep=[], default_fields_to_remove=[]):
     '''
     This is used to preprocess the fields of a component as returned by canvas.
-    The idea is to 1) get rid of fields that we don't care about, and 2) get
-    rid of some default values that we don't want filling up our yaml files.
+    The idea is to:
+    1. get rid of fields that we don't care about, and
+    2. get rid of fields that have default values that are usually meaningless
+       to save and we don't want them filling up our yaml files.
 
     - fields_to_keep: a list of strings where each string is a key that is
       a valid field for the component
-    - default_fields_to_remove: a dictionary where containing the default
-      values for the corresponding keys
+    - default_fields_to_remove: a dictionary containing the default values for
+      the corresponding keys
     '''
-    cleaned = {}
-    for k in fields_to_keep:
-        if k in fields:
-            cleaned[k] = fields[k]
-
-    for f in default_fields_to_remove:
-        if f in cleaned and cleaned[f] == default_fields_to_remove[f]:
-            del cleaned[f]
-
-    return cleaned
+    for k in list(fields):
+        if ((k not in fields_to_keep) or
+                (k in default_fields_to_remove and
+                fields[k] == default_fields_to_remove[k])):
+            del fields[k]

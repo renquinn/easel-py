@@ -45,8 +45,8 @@ class Module(component.Component):
                 "unlock_at": "",
                 }
         desired_fields = cls.__init__.__code__.co_varnames[1:]
-        filtered = component.filter_fields(fields, desired_fields, defaults)
-        return Module(**filtered)
+        component.filter_fields(fields, desired_fields, defaults)
+        return Module(**fields)
 
     def postprocess(self, db, course_, dry_run):
         course_id = course_.canvas_id

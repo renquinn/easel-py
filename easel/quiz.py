@@ -94,9 +94,9 @@ class Quiz(component.Component):
                 "one_question_at_a_time": False,
                 }
         desired_fields = cls.__init__.__code__.co_varnames[1:]
-        filtered = component.filter_fields(fields, desired_fields, defaults)
-        if 'description' in filtered:
-            filtered['description'] = helpers.filter_canvas_html(filtered['description'])
+        component.filter_fields(fields, desired_fields, defaults)
+        if 'description' in fields:
+            fields['description'] = helpers.filter_canvas_html(fields['description'])
 
         qq_defaults = {
                 "correct_comments": "",
@@ -117,15 +117,15 @@ class Quiz(component.Component):
         all_qqfields = {}
         all_qafields = {}
         filtered_questions = []
-        for qqfields in filtered['quiz_questions']:
-            qqfiltered = component.filter_fields(qqfields, qq_desired_fields, qq_defaults)
-            if 'id' in qqfiltered:
-                del qqfiltered['id']
-            if 'question_text' in qqfiltered:
-                qqfiltered['question_text'] = helpers.filter_canvas_html(qqfiltered['question_text'])
+        for qqfields in fields['quiz_questions']:
+            component.filter_fields(qqfields, qq_desired_fields, qq_defaults)
+            if 'id' in qqfields:
+                del qqfields['id']
+            if 'question_text' in qqfields:
+                qqfields['question_text'] = helpers.filter_canvas_html(qqfields['question_text'])
 
-            all_qqfields.update(qqfiltered)
-            for answer in qqfiltered.get('answers', []):
+            all_qqfields.update(qqfields)
+            for answer in qqfields.get('answers', []):
                 # let's not use component.filter_fields for quiz question
                 # answers since they are staying as dictionaries and there
                 # should be much less extra fields than fields to keep
@@ -153,10 +153,8 @@ class Quiz(component.Component):
                         answer[correct_key] = answer[answer_key]
                         del answer[answer_key]
                 all_qafields.update(answer)
-            filtered_questions.append(qqfiltered)
-        filtered['quiz_questions'] = filtered_questions
         try:
-            return Quiz(**filtered)
+            return Quiz(**fields)
         except:
             import json
             print(json.dumps(all_qqfields, indent=4))

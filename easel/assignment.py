@@ -106,10 +106,10 @@ class Assignment(component.Component):
                 "peer_reviews": False,
                 }
         desired_fields = cls.__init__.__code__.co_varnames[1:]
-        filtered = component.filter_fields(fields, desired_fields, defaults)
-        if 'description' in filtered:
-            filtered['description'] = helpers.filter_canvas_html(filtered['description'])
-        return Assignment(**filtered)
+        component.filter_fields(fields, desired_fields, defaults)
+        if 'description' in fields:
+            fields['description'] = helpers.filter_canvas_html(fields['description'])
+        return Assignment(**fields)
 
 
 # Needed for custom yaml tag
