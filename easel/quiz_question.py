@@ -17,7 +17,7 @@ VALID_TYPES = ["calculated_question", "essay_question", "file_upload_question",
 class QuizQuestion(component.Component):
 
     def __init__(self, question_name=None, question_text=None,
-            quiz_group_id=None, question_type=None, position=None,
+            question_type=None, position=None,
             points_possible=None, correct_comments=None,
             incorrect_comments=None, neutral_comments=None,
             matching_answer_incorrect_matches=None, formulas=None,
@@ -27,18 +27,8 @@ class QuizQuestion(component.Component):
                 update_path=QUIZ_QUESTION_PATH, db_table=QUIZ_QUESTIONS_TABLE,
                 canvas_wrapper=WRAPPER, filename=filename)
         self.question_name=question_name
-        if question_text:
-            question_text = question_text.strip()
-            question_html = helpers.md2html(question_text)
-            # TODO
-            # python-markdown does not support attribute lists on tables but
-            # the default table in canvas is hard to read. This solves that as
-            # long as we always want the same formatting on tables.
-            self.question_text = question_html.replace("<table>", "<table class=\"table table-striped table-bordered\">")
-        else:
-            self.question_text = None
+        self.question_text = question_text
         self.id = id
-        self.quiz_group_id=quiz_group_id
         self.question_type=question_type
         self.position=position
         self.points_possible=points_possible
@@ -50,6 +40,14 @@ class QuizQuestion(component.Component):
         self.formulas=formulas
         self.text_after_answers=text_after_answers
         self.answers=answers
+
+    def preprocess(self, db, course_, dry_run):
+        if self.question_text:
+            question_html = helpers.md2html(self.question_text.strip())
+            # TODO: python-markdown does not support attribute lists on tables
+            # but the default table in canvas is hard to read. This solves that
+            # as long as we always want the same formatting on tables.
+            self.question_text = question_html.replace("<table>", "<table class=\"table table-striped table-bordered\">")
         for answer in self.answers:
             if 'answer_text' in answer:
                 answer_text = answer.get("answer_text", "")
