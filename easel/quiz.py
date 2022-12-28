@@ -59,10 +59,7 @@ class Quiz(component.Component):
         self.only_visible_to_overrides=only_visible_to_overrides
         self.anonymous_submissions=anonymous_submissions
         self.assignment_group_id=assignment_group_id
-        if description:
-            self.description = helpers.md2html(description.strip())
-        else:
-            self.description = None
+        self.description = description
         # easel-managed attrs
         # local variable has to be called assignment_group (clashes with module
         # title) to match the yaml and Canvas response
@@ -75,106 +72,86 @@ class Quiz(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
-                'html_url', 'mobile_url', 'preview_url', 'unpublishable',
-                'lock_info', 'speed_grader_url', 'quiz_extensions_url',
-                'all_dates', 'version_number', 'question_types',
-                'question_count', 'has_overrides', 'all_dates', 'course_id',
-                'submission_download_url', 'due_date_required',
-                'max_name_length', 'turnitin_enabled', 'vericite_enabled',
-                'turnitin_settings', 'peer_review_count', 'group_category_id',
-                'needs_grading_count', 'needs_grading_count_by_section',
-                'post_to_sis', 'integration_id', 'integration_data',
-                'has_submitted_submissions', 'grading_standard_id',
-                'unpublishable', 'only_visible_to_overrides',
-                'locked_for_user', 'lock_info', 'lock_explanation', 'quiz_id',
-                'discussion_topic', 'freeze_on_copy', 'frozen',
-                'frozen_attributes', 'submission', 'assignment_visibility',
-                'overrides', 'moderated_grading', 'grader_count',
-                'final_grader_id', 'grader_comments_visible_to_graders',
-                'graders_anonymous_to_graders',
-                'grader_names_visible_to_final_grader', 'anonymous_grading',
-                'post_manually', 'score_statistics', 'can_submit',
-                "workflow_state", "submissions_download_url", "url",
-                "sis_assignment_id", "secure_params",
-                "require_lockdown_browser", "original_assignment_name",
-                "lockdown_browser_monitor_data",
-                "original_course_id", "original_quiz_id",
-                "original_assignment_id", "muted", "is_quiz_assignment",
-                "in_closed_grading_period", "external_tool_tag_attributes",
-                "can_duplicate", "anonymous_peer_reviews",
-                "anonymous_instructor_annotations", "anonymize_students",
-                "timer_autosubmit_disabled", "points_possible",
-                "can_unpublish", "can_update", "permissions",
-                "quiz_reports_url", "quiz_statistics_url",
-                "message_students_url", "section_count",
-                "quiz_submission_versions_html_url", "assignment_id",
-                "has_access_code", "migration_id",
-                "important_dates"]
-        defaults = [("quiz_type", "assignment"),
-                ("allowed_attempts", -1),
-                ("scoring_policy", "keep_highest"),
-                ("published", True),
-                ("anonymous_submissions", False),
-                ("show_correct_answers", True),
-                ("require_lockdown_browser_for_results", False),
-                ("require_lockdown_browser_monitor", False),
-                ("lockdown_browser_monitor_data", ""),
-                ("one_time_results", False),
-                ("show_correct_answers_last_attempt", False),
-                ("hide_results", None),
-                ("time_limit", None),
-                ("access_code", None),
-                ("ip_filter", None),
-                ("show_correct_answers_at", None),
-                ("hide_correct_answers_at", None),
-                ("cant_go_back", False),
-                ("one_question_at_a_time", False),
-                ]
-        component.filter_fields(fields, extras, defaults)
+        defaults = {
+                "quiz_type": "assignment",
+                "allowed_attempts": -1,
+                "scoring_policy": "keep_highest",
+                "published": True,
+                "anonymous_submissions": False,
+                "show_correct_answers": True,
+                "require_lockdown_browser_for_results": False,
+                "require_lockdown_browser_monitor": False,
+                "lockdown_browser_monitor_data": "",
+                "one_time_results": False,
+                "show_correct_answers_last_attempt": False,
+                "hide_results": None,
+                "time_limit": None,
+                "access_code": None,
+                "ip_filter": None,
+                "show_correct_answers_at": None,
+                "hide_correct_answers_at": None,
+                "cant_go_back": False,
+                "one_question_at_a_time": False,
+                }
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        component.filter_fields(fields, desired_fields, defaults)
         if 'description' in fields:
             fields['description'] = helpers.filter_canvas_html(fields['description'])
 
-        extras = ['id', "quiz_id", "quiz_group_id", "assessment_question_id",
-                'migration_id', 'matches', "comments_html",
-                "correct_comments_html", "incorrect_comments_html",
-                "neutral_comments_html"]
-        defaults = [("correct_comments", ""), ("incorrect_comments", ""),
-                ("neutral_comments", ''),
-                ("neutral_comments", None),
-                ("comments", ''),
-                ("comments", None),
-                ('position', None),
-                ("variables", None),
-                ("formulas", None),
-                ("answer_tolerance", None),
-                ("formula_decimal_places", None),
-                ("matches", None),
-                ("matching_answer_incorrect_matches", None)]
+        qq_defaults = {
+                "correct_comments": "",
+                "incorrect_comments": "",
+                "neutral_comments": '',
+                "comments": '',
+                'position': None,
+                "variables": None,
+                "formulas": None,
+                "answer_tolerance": None,
+                "formula_decimal_places": None,
+                "matches": None,
+                "matching_answer_incorrect_matches": None,
+                "answers": [],
+                }
+        from easel import quiz_question # import here to prevent circular import
+        qq_desired_fields = quiz_question.QuizQuestion.__init__.__code__.co_varnames[1:]
         all_qqfields = {}
         all_qafields = {}
+        filtered_questions = []
         for qqfields in fields['quiz_questions']:
-            component.filter_fields(qqfields, extras, defaults)
+            component.filter_fields(qqfields, qq_desired_fields, qq_defaults)
+            if 'id' in qqfields:
+                del qqfields['id']
             if 'question_text' in qqfields:
                 qqfields['question_text'] = helpers.filter_canvas_html(qqfields['question_text'])
 
             all_qqfields.update(qqfields)
-            for answer in qqfields['answers']:
-                component.filter_fields(answer, ['id', 'html', 'migration_id',
-                    'comments_html', 'incorrect_comments_html',
-                    'correct_comments_html'],
-                    [("comments", "")])
-                answer_keys = [("text", "answer_text"),
-                        ("weight", "answer_weight"),
-                        ("left", "answer_match_left"),
-                        ("right", "answer_match_right"),
-                        ("comments", "answer_comments")]
-                # the keys for answers are inconsistent between push and pull
-                # api calls so we need to rename some things
-                for ak in answer_keys:
-                    if ak[0] in answer:
-                        answer[ak[1]] = answer[ak[0]]
-                        del answer[ak[0]]
+            for answer in qqfields.get('answers', []):
+                # let's not use component.filter_fields for quiz question
+                # answers since they are staying as dictionaries and there
+                # should be much less extra fields than fields to keep
+                extra_fields = ['id', 'html', 'migration_id', 'comments_html',
+                        'incorrect_comments_html', 'correct_comments_html']
+                for field in extra_fields:
+                    if field in answer:
+                        del answer[field]
+                if 'comments' in answer and not answer['comments']:
+                    del answer['comments']
+
+                # the field names for answers are different when you pull so we
+                # need to fix that to be consistent with the required field
+                # names for pushing
+                answer_keys = {
+                        "text": "answer_text",
+                        "weight": "answer_weight",
+                        "left": "answer_match_left",
+                        "right": "answer_match_right",
+                        "comments": "answer_comments",
+                        }
+                for answer_key in answer_keys:
+                    if answer_key in answer:
+                        correct_key = answer_keys[answer_key]
+                        answer[correct_key] = answer[answer_key]
+                        del answer[answer_key]
                 all_qafields.update(answer)
         try:
             return Quiz(**fields)
@@ -197,9 +174,11 @@ class Quiz(component.Component):
             self.assignment_group_id = cid.canvas_id
 
     def preprocess(self, db, course_, dry_run):
-         self.get_assignment_group_id(db, course_.canvas_id)
-         self.remember_published = self.published
-         self.published = False
+        if self.description:
+            self.description = helpers.md2html(self.description.strip())
+        self.get_assignment_group_id(db, course_.canvas_id)
+        self.remember_published = self.published
+        self.published = False
 
     def postprocess(self, db, course_, dry_run):
         course_id = course_.canvas_id

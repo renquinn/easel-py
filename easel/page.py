@@ -56,12 +56,12 @@ class Page(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extras = ['page_id', 'created_at', 'updated_at',
-                'hide_from_students', 'last_edited_by', 'locked_for_user',
-                'lock_info', 'lock_explanation', 'html_url']
-        defaults = [("front_page", False),
-                ("editing_roles", "teachers")]
-        component.filter_fields(fields, extras, defaults)
+        defaults = {
+                "front_page": False,
+                "editing_roles": "teachers",
+                }
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        component.filter_fields(fields, desired_fields, defaults)
         if 'body' in fields:
             fields['body'] = helpers.filter_canvas_html(fields['body'])
         return Page(**fields)

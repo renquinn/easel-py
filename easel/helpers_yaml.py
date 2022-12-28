@@ -1,3 +1,4 @@
+import collections
 import os.path
 import yaml
 
@@ -31,11 +32,33 @@ def read(filepath):
 def write(filepath, obj):
     if os.path.isdir(filepath):
         return None
+    # write cleaner yaml using the representer functions defined below
+    yaml.add_representer(str, str_representer)
+    yaml.representer.SafeRepresenter.add_representer(str, str_representer) # safe_dump
+    yaml.add_representer(collections.OrderedDict, represent_ordered_dict)
+    yaml.representer.SafeRepresenter.add_representer(collections.OrderedDict, represent_ordered_dict) # safe_dump
+
     with open(filepath, 'w') as f:
         tag = f"!{obj.__class__.__name__}"
         data = obj.yaml()
         out = f"{tag}\n{data}"
         f.write(out)
+
+def str_representer(dumper, data):
+    '''Writes block strings for multiple lines, regular strings for single lines'''
+    if len(data.splitlines()) > 1:  # check for multiline string
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+def represent_ordered_dict(dumper, data):
+    '''Pyyaml defaults to orderring keys alphabetically. This function attempts
+    to keep the original order of a dictionary which (mostly) improves
+    systematically updating yaml files so that the files don't get completely
+    reorganized when just updating a single key.'''
+    ordered = []
+    for k, v in data.items():
+        ordered.append((dumper.represent_data(k), dumper.represent_data(v)))
+    return yaml.nodes.MappingNode('tag:yaml.org,2002:map', ordered)
 
 def construct_node(loader, node, class_):
     if isSequenceNode(node):

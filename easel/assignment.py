@@ -81,43 +81,32 @@ class Assignment(component.Component):
         if self.description:
             self.description = helpers.md2html(self.description.strip())
 
+    # TODO: originally, pulling a new component vs pulling an existing one to
+    # update it was a different operation. Since then, I've added extra
+    # processing to some of the operations for pulling a new component that I
+    # need to use that for updating now, which is why I wrote this function.
+    # Seems like this could use a better design to reuse some of the
+    # functionality while taking advantage of inheriting from the Component
+    # class as well.
+    def pull(self, db, course_, dry_run):
+        cid = canvas_id.CanvasID(self.filename, course_.canvas_id)
+        cid.find_id(db)
+        return pull(db, course_, cid.canvas_id, dry_run)[0]
+
     def __repr__(self):
         return f"Assignment(name={self.name}, published={self.published})"
 
     @classmethod
     def build(cls, fields):
-        extras = ['id', 'assignment_group_id', 'created_at', 'updated_at',
-                'has_overrides', 'all_dates', 'course_id', 'html_url',
-                'submission_download_url', 'due_date_required',
-                'max_name_length', 'turnitin_enabled', 'vericite_enabled',
-                'turnitin_settings', 'peer_review_count', 'group_category_id',
-                'needs_grading_count', 'needs_grading_count_by_section',
-                'post_to_sis', 'integration_id', 'integration_data',
-                'has_submitted_submissions', 'grading_standard_id',
-                'unpublishable', 'only_visible_to_overrides',
-                'locked_for_user', 'lock_info', 'lock_explanation', 'quiz_id',
-                'discussion_topic', 'freeze_on_copy', 'frozen',
-                'frozen_attributes', 'submission', 'assignment_visibility',
-                'overrides', 'moderated_grading', 'grader_count',
-                'final_grader_id', 'grader_comments_visible_to_graders',
-                'graders_anonymous_to_graders',
-                'grader_names_visible_to_final_grader', 'anonymous_grading',
-                'post_manually', 'score_statistics', 'can_submit',
-                "workflow_state", "submissions_download_url", "url",
-                "sis_assignment_id", "secure_params",
-                "require_lockdown_browser", "original_assignment_name",
-                "original_course_id", "original_quiz_id",
-                "original_assignment_id", "muted", "is_quiz_assignment",
-                "in_closed_grading_period", "external_tool_tag_attributes",
-                "can_duplicate", "anonymous_peer_reviews",
-                "anonymous_instructor_annotations", "anonymize_students",
-                "important_dates"]
-        defaults = [("automatic_peer_reviews", False),
-                ("grade_group_students_individually", False),
-                ("intra_group_peer_reviews", False),
-                ("omit_from_final_grade", False),
-                ("peer_reviews", False)]
-        component.filter_fields(fields, extras, defaults)
+        defaults = {
+                "automatic_peer_reviews": False,
+                "grade_group_students_individually": False,
+                "intra_group_peer_reviews": False,
+                "omit_from_final_grade": False,
+                "peer_reviews": False,
+                }
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        component.filter_fields(fields, desired_fields, defaults)
         if 'description' in fields:
             fields['description'] = helpers.filter_canvas_html(fields['description'])
         return Assignment(**fields)
@@ -152,6 +141,7 @@ def pull(db, course_, assignment_id, dry_run):
             ag = helpers_yaml.read(agcid.filename)
             if ag:
                 a['assignment_group'] = ag.name
+                del a['assignment_group_id']
             else:
                 logging.error("failed to find the assignment group for "
                         f"the assignment group with id {agid}. Your "
@@ -164,6 +154,7 @@ def pull(db, course_, assignment_id, dry_run):
             r = helpers.get(agpath, dry_run=dry_run)
             if 'name' in r:
                 a['assignment_group'] = r['name']
+                del a['assignment_group_id']
             else:
                 logging.error("TODO: invalid response from canvas for "
                         "the assignment group: " + json.dumps(r, indent=4))

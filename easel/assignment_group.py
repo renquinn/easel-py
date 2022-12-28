@@ -26,8 +26,8 @@ class AssignmentGroup(component.Component):
 
     @classmethod
     def build(cls, fields):
-        extras = ['id', 'sis_source_id', 'integration_data', 'rules']
-        component.filter_fields(fields, extras)
+        desired_fields = cls.__init__.__code__.co_varnames[1:]
+        component.filter_fields(fields, desired_fields)
         return AssignmentGroup(**fields)
 
 def pull_all(db, course_, dry_run):
