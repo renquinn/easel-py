@@ -28,15 +28,15 @@ class Quiz(component.Component):
             cant_go_back=None, access_code=None, ip_filter=None,
             one_time_results=None, only_visible_to_overrides=None,
             anonymous_submissions=None, assignment_group_id=None,
-            remember_published=None,
-            quiz_questions=None, assignment_group=None, filename=""):
+            quiz_questions=None, assignment_group=None, filename="",
+            yaml_order=[]):
         super().__init__(create_path=QUIZZES_PATH,
                 update_path=QUIZ_PATH, db_table=QUIZZES_TABLE,
-                canvas_wrapper=WRAPPER, filename=filename)
+                canvas_wrapper=WRAPPER, filename=filename,
+                yaml_order=yaml_order)
         self.title=title
         self.published=published
-        self.remember_published=published # see the end of the postprocess method
-        self.description=description
+        self.remember_published=None # see the end of the postprocess method
         self.points_possible=points_possible
         self.allowed_attempts=allowed_attempts
         self.due_at=due_at
@@ -291,7 +291,8 @@ def load_questions_file(filename):
 
 # Needed for custom yaml tag
 def constructor(loader, node):
-    return Quiz(**loader.construct_mapping(node))
+    fields = helpers_yaml.construct_ordered_mapping(loader, node)
+    return Quiz(**fields)
 
 def pull(db, course_, quiz_, dry_run):
     course_id = course_.canvas_id

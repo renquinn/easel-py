@@ -4,6 +4,7 @@ from easel import canvas_id
 from easel import component
 from easel import course
 from easel import helpers
+from easel import helpers_yaml
 
 PAGES_PATH=course.COURSE_PATH+"/pages"
 PAGE_PATH=PAGES_PATH+"/{}" # page url
@@ -15,9 +16,11 @@ class Page(component.Component):
 
     def __init__(self, url=None, title=None, body=None, published=None,
             front_page=None, todo_date=None, editing_roles=None,
-            notify_of_update=None, filename="", student_todo_at=None):
+            notify_of_update=None, filename="", student_todo_at=None,
+            yaml_order=[]):
         super().__init__(create_path=PAGES_PATH, update_path=PAGE_PATH,
-                db_table=TABLE, canvas_wrapper=WRAPPER, filename=filename)
+                db_table=TABLE, canvas_wrapper=WRAPPER, filename=filename,
+                yaml_order=yaml_order)
         self.url = url
         self.title = title
         self.published = published
@@ -68,7 +71,8 @@ class Page(component.Component):
 
 # Needed for custom yaml tag
 def constructor(loader, node):
-    return Page(**loader.construct_mapping(node))
+    fields = helpers_yaml.construct_ordered_mapping(loader, node)
+    return Page(**fields)
 
 def pull_page(db, course_id, page_url, dry_run):
     page_ = helpers.get(PAGE_PATH.format(course_id, page_url), dry_run=dry_run)

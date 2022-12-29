@@ -35,8 +35,6 @@ def write(filepath, obj):
     # write cleaner yaml using the representer functions defined below
     yaml.add_representer(str, str_representer)
     yaml.representer.SafeRepresenter.add_representer(str, str_representer) # safe_dump
-    yaml.add_representer(collections.OrderedDict, represent_ordered_dict)
-    yaml.representer.SafeRepresenter.add_representer(collections.OrderedDict, represent_ordered_dict) # safe_dump
 
     with open(filepath, 'w') as f:
         tag = f"!{obj.__class__.__name__}"
@@ -50,16 +48,6 @@ def str_representer(dumper, data):
         return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
-def represent_ordered_dict(dumper, data):
-    '''Pyyaml defaults to orderring keys alphabetically. This function attempts
-    to keep the original order of a dictionary which (mostly) improves
-    systematically updating yaml files so that the files don't get completely
-    reorganized when just updating a single key.'''
-    ordered = []
-    for k, v in data.items():
-        ordered.append((dumper.represent_data(k), dumper.represent_data(v)))
-    return yaml.nodes.MappingNode('tag:yaml.org,2002:map', ordered)
-
 def construct_node(loader, node, class_):
     if isSequenceNode(node):
         seq = []
@@ -72,6 +60,12 @@ def construct_node(loader, node, class_):
         return class_(loader.construct_scalar(node))
     else:
         raise ValueError(f"Invalid yaml node type {type(node)} for {node}")
+
+def construct_ordered_mapping(loader, node):
+    '''saves the field order in the file to correctly recreate the file later'''
+    fields = loader.construct_mapping(node)
+    fields['yaml_order'] = list(fields)
+    return fields
 
 def isSequenceNode(node):
     return isinstance(node, yaml.nodes.SequenceNode)

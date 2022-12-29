@@ -29,10 +29,11 @@ class Assignment(component.Component):
             rubric_settings=None, position=None, description=None,
             free_form_criterion_comments=None, assignment_group=None,
             notify_of_update=None, annotatable_attachment_id=None,
-            filename=""):
+            filename="", yaml_order=[]):
         super().__init__(create_path=ASSIGNMENTS_PATH,
                 update_path=ASSIGNMENT_PATH, db_table=ASSIGNMENTS_TABLE,
-                canvas_wrapper=WRAPPER, filename=filename)
+                canvas_wrapper=WRAPPER, filename=filename,
+                yaml_order=yaml_order)
         self.allowed_attempts = allowed_attempts
         self.allowed_extensions = allowed_extensions
         self.anonymous_submissions = anonymous_submissions
@@ -114,7 +115,8 @@ class Assignment(component.Component):
 
 # Needed for custom yaml tag
 def constructor(loader, node):
-    return Assignment(**loader.construct_mapping(node))
+    fields = helpers_yaml.construct_ordered_mapping(loader, node)
+    return Assignment(**fields)
 
 def pull(db, course_, assignment_id, dry_run):
     course_id = course_.canvas_id

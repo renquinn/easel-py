@@ -30,12 +30,13 @@ class Component:
     """
 
     def __init__(self, create_path="", update_path="", db_table="",
-            canvas_wrapper="", filename=""):
+            canvas_wrapper="", filename="", yaml_order=[]):
         self.create_path = create_path
         self.update_path = update_path
         self.table = db_table
         self.canvas_wrapper = canvas_wrapper
         self.filename = filename
+        self.yaml_order = yaml_order
 
     def __iter__(self):
         if self.canvas_wrapper:
@@ -48,7 +49,7 @@ class Component:
 
     def gen_fields(self):
         ignore_these = ["create_path", "update_path", "table",
-                "canvas_wrapper", "filename"]
+                "canvas_wrapper", "filename", "yaml_order"]
         fields = vars(self)
         for field in fields.items():
             if field[0] not in ignore_these and field[1] is not None:
@@ -255,8 +256,19 @@ class Component:
         custom yaml for use in the helpers_yaml.write() function."""
         fields = dict(self)
         if self.canvas_wrapper:
+            # extract fields from wrapper
             fields = fields[self.canvas_wrapper]
-        return yaml.dump(fields)
+
+        # reorder fields according to original ordering from the yaml file
+        # (if we have an ordering)
+        ordered = {}
+        if not self.yaml_order:
+            ordered = fields
+        for key in self.yaml_order:
+            if key in fields:
+                ordered[key] = fields[key]
+
+        return yaml.dump(ordered, sort_keys=False)
 
 def build(class_name, dictionary):
     from easel import assignment_group
