@@ -8,6 +8,7 @@ from easel import component
 from easel import course
 from easel import files
 from easel import helpers
+from easel import helpers_yaml
 from easel import page
 from easel import quiz
 
@@ -21,10 +22,11 @@ class Module(component.Component):
 
     def __init__(self, name=None, published=None, position=None,
             unlock_at=None, require_sequential_progress=None,
-            prerequisite_module_ids=None, items=None, filename=""):
+            prerequisite_module_ids=None, items=None, filename="",
+            yaml_order=[]):
         super().__init__(create_path=MODULES_PATH, update_path=MODULE_PATH,
                 db_table=MODULES_TABLE, canvas_wrapper=WRAPPER,
-                filename=filename)
+                filename=filename, yaml_order=yaml_order)
         self.name = name
         self.published = published
         self.position = position
@@ -104,7 +106,8 @@ class Module(component.Component):
 
 # Needed for custom yaml tag
 def constructor(loader, node):
-    return Module(**loader.construct_mapping(node))
+    fields = helpers_yaml.construct_ordered_mapping(loader, node)
+    return Module(**fields)
 
 def build_item(item, indent=0):
     if indent == 0:

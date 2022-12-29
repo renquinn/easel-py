@@ -4,6 +4,7 @@ from easel import canvas_id
 from easel import component
 from easel import course
 from easel import helpers
+from easel import helpers_yaml
 
 ASSIGN_GROUPS_PATH=course.COURSE_PATH+"/assignment_groups"
 ASSIGN_GROUP_PATH=ASSIGN_GROUPS_PATH+"/{}"
@@ -12,10 +13,11 @@ ASSIGN_GROUPS_DIR="assignment_groups"
 
 class AssignmentGroup(component.Component):
 
-    def __init__(self, name="", position=-1, group_weight=-1, filename=""):
+    def __init__(self, name="", position=-1, group_weight=-1, filename="",
+            yaml_order=[]):
         super().__init__(create_path=ASSIGN_GROUPS_PATH,
                 update_path=ASSIGN_GROUP_PATH, db_table=ASSIGN_GROUPS_TABLE,
-                filename=filename)
+                filename=filename, yaml_order=yaml_order)
         self.name = name
         self.position = position
         self.group_weight = group_weight
@@ -48,4 +50,5 @@ def pull_all(db, course_, dry_run):
 
 # Needed for custom yaml tag
 def constructor(loader, node):
-    return AssignmentGroup(**loader.construct_mapping(node))
+    fields = helpers_yaml.construct_ordered_mapping(loader, node)
+    return AssignmentGroup(**fields)
