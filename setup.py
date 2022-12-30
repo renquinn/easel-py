@@ -7,7 +7,7 @@ with open("requirements.txt", "r") as fh:
 
 setuptools.setup(
     name="easel-cli",
-    version="1.0.4",
+    version="1.0.5",
     author="Ren Quinn",
     author_email="renquinn@gmail.com",
     description="A Canvas course management tool",
