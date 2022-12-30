@@ -54,8 +54,7 @@ class Page(component.Component):
                     filename = cid.filename.split('/')[1].split('.')[0]
                     fields[filename] = cid.canvas_id
 
-            body = body.format(**fields)
-            self.body = helpers.md2html(body.strip())
+            self.body = helpers.md2html(body.strip(), fields)
 
     @classmethod
     def build(cls, fields):
