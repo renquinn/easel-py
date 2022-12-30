@@ -27,6 +27,7 @@ class Quiz(component.Component):
             scoring_policy=None, one_question_at_a_time=None,
             cant_go_back=None, access_code=None, ip_filter=None,
             one_time_results=None, only_visible_to_overrides=None,
+            remember_published=None,
             anonymous_submissions=None, assignment_group_id=None,
             quiz_questions=None, assignment_group=None, filename="",
             yaml_order=[]):
