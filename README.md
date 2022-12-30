@@ -45,6 +45,23 @@ material from a previous course and pushing it to a new course:
 4. Pull everything from it: `easel pull`
 5. Add the new course: `easel course add <new_canvas_course_url>`
 6. Push everything to the new course: `easel --course <new_course_id> push`
+7. At this point, you may remove your old course: `easel course remove <old_course_id>`
+
+## Individual Component References
+
+These are the components currently managed by easel. For configuration, see the
+linked documentation.
+
+- [Assignments](docs/component_fields/assignment.md)
+- [Assignment Groups](docs/component_fields/assignment_group.md)
+- [External Tools](docs/component_fields/external_tool.md)
+- [Course Grading Scheme](docs/course_grading_scheme.md)
+- [Course Settings](docs/course_settings.md)
+- [Modules](docs/component_fields/module.md)
+- [Navigation Tabs](docs/component_fields/navigation.md)
+- [Pages](docs/component_fields/page.md)
+- [Quizzes](docs/component_fields/quiz.md)
+- [Syllabus](docs/syllabus.md)
 
 ## Command Reference
 
@@ -179,17 +196,6 @@ component has some associated body/description content, it should be included in
 markdown as part of the component's yaml configuration using a multiline string
 (see the `examples` directory for examples).
 
-## Individual Component References
-
-- [Assignments](docs/component_fields/assignment.md)
-- [Assignment Groups](docs/component_fields/assignment_group.md)
-- [External Tools](docs/component_fields/external_tool.md)
-- [Course Grading Scheme](docs/course_grading_scheme.md)
-- [Modules](docs/component_fields/module.md)
-- [Navigation Tabs](docs/component_fields/navigation.md)
-- [Pages](docs/component_fields/page.md)
-- [Quizzes](docs/component_fields/quiz.md)
-
 ## Dates
 
 When specifying dates (e.g., due_at, unlock_at, lock_at),
@@ -204,7 +210,6 @@ sooner listed first.
 - add a new command which generates a component config file formatted and filled
   with common options
     - -i flag could prompt user to enter required options interactively
-- pushing files
 - manage datetimes for user
     - relative semester/time specification
         - e.g.,
