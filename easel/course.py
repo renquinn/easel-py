@@ -142,17 +142,16 @@ def format_syllabus(db, course_id):
             md_fields = md_fields[course_id]
 
     # 2. course-specific fields
-    course_fields = md_fields
     c = find(db, course_id)[0]
-    # TODO: Canvas may change the format of these fields in the future
-    course_fields['code'] = c.code[:7]
-    course_fields['crn'] = c.name[-6:-1]
-    course_fields['semester'] = ' '.join(c.name.split()[1:3])
-    course_fields['course_id'] = course_id
+    course_fields = helpers.get_course_template_fields(db, c)
 
     # 3. global fields
     fields = helpers.get_global_template_fields()
+
+    # merge all template fields
     fields.update(course_fields)
+    fields.update(md_fields)
+
     return helpers.md2html(text, fields)
 
 def push_syllabus(db, course_id, dry_run):

@@ -309,9 +309,9 @@ def cmd_push(db, args):
 
 def cmd_md(db, args):
     if not args.components:
-        args.components = ["syllabus.md", "assignment_groups", "assignments",
-                "files", "pages", "quizzes", "modules"]
+        args.components = ["syllabus.md", "assignments", "pages", "quizzes"]
 
+    courses = course.find_all(db)
     for component_filepath in args.components:
         if component_filepath.endswith("*"):
             component_filepath = component_filepath[:-1]
@@ -323,19 +323,21 @@ def cmd_md(db, args):
                 logging.error("Invalid directory: "+component_filepath)
                 continue
 
-            for child_path in os.listdir(component_filepath):
-                full_child_path = component_filepath + '/' + child_path
-                component = helpers_yaml.read(full_child_path)
-                print(component.md())
+            for course_ in courses:
+                for child_path in os.listdir(component_filepath):
+                    full_child_path = component_filepath + '/' + child_path
+                    component = helpers_yaml.read(full_child_path)
+                    print(component.md(db, course_))
         else:
             if component_filepath == "syllabus.md":
-                f = open("syllabus.md")
-                print(helpers.md2html(f.read()))
-                f.close()
+                for course_ in courses:
+                    print(course.format_syllabus(db, course_.canvas_id))
             else:
                 component = helpers_yaml.read(component_filepath)
                 if isinstance(component, list):
-                    for obj in component:
-                        print("\n\n*****\n", obj.md())
+                    for course_ in courses:
+                        for obj in component:
+                            print("\n\n*****\n", obj.md(db, course_))
                 else:
-                    print(component.md())
+                    for course_ in courses:
+                        print(component.md(db, course_))

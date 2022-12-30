@@ -32,29 +32,21 @@ class Page(component.Component):
         self.notify_of_update = notify_of_update
         self.body = body
 
-    def preprocess(self, db, course_, dry_run):
+    def md(self, db, course_):
         if self.body:
-            self.body = helpers.md2html(self.body.strip())
+            body = self.body
+            fields = helpers.get_global_template_fields()
+            course_fields = helpers.get_course_template_fields(db, course_)
+            fields.update(course_fields)
+            return helpers.md2html(body.strip(), fields)
+        return ''
 
     def __repr__(self):
         return f"Page(title={self.title}, published={self.published})"
 
     def preprocess(self, db, course_, dry_run):
         if self.body:
-            body = self.body
-
-            # format fields
-            fields = {}
-            # 1. course id
-            fields["course_id"] = course_.canvas_id
-            # 2. all assignment/quiz ids ("{root_filename}" => canvas_id)
-            # root_filename: w/o parent dirs and extension
-            for cid in canvas_id.find_all_course_components(db, course_.canvas_id):
-                if '/' in cid.filename:
-                    filename = cid.filename.split('/')[1].split('.')[0]
-                    fields[filename] = cid.canvas_id
-
-            self.body = helpers.md2html(body.strip(), fields)
+            self.body = self.md(db, course_)
 
     @classmethod
     def build(cls, fields):

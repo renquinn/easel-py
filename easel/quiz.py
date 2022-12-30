@@ -174,9 +174,17 @@ class Quiz(component.Component):
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
+    def md(self, db, course_):
+        if self.description:
+            fields = helpers.get_global_template_fields()
+            course_fields = helpers.get_course_template_fields(db, course_)
+            fields.update(course_fields)
+            return helpers.md2html(self.description.strip())
+        return ''
+
     def preprocess(self, db, course_, dry_run):
         if self.description:
-            self.description = helpers.md2html(self.description.strip())
+            self.description = self.md(db, course_)
         self.get_assignment_group_id(db, course_.canvas_id)
         self.remember_published = self.published
         self.published = False

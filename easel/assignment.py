@@ -77,10 +77,18 @@ class Assignment(component.Component):
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
+    def md(self, db, course_):
+        if self.description:
+            fields = helpers.get_global_template_fields()
+            course_fields = helpers.get_course_template_fields(db, course_)
+            fields.update(course_fields)
+            return helpers.md2html(self.description.strip(), fields)
+        return ''
+
     def preprocess(self, db, course_, dry_run):
         self.get_assignment_group_id(db, course_.canvas_id)
         if self.description:
-            self.description = helpers.md2html(self.description.strip())
+            self.description = self.md(db, course_)
 
     # TODO: originally, pulling a new component vs pulling an existing one to
     # update it was a different operation. Since then, I've added extra

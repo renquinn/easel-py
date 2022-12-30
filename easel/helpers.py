@@ -12,6 +12,7 @@ import markdown
 import requests
 import tinydb
 
+from easel import canvas_id
 
 API="/api/v1"
 HTTPS="https://"
@@ -27,7 +28,34 @@ DIRS = { # maps a directory name to its easel module name
         "local": "",
         }
 
+def get_course_template_fields(db, course_):
+    '''Take a course and produce relevant info to be formatted into the
+    markdown of various components (e.g., syllabus, pages, assignment
+    descriptions). TODO: At some point there may be a collision with an
+    assignment name and the course info key names (e.g., an assignment named
+    "semester").'''
+    fields = {}
+
+    # 1. course info
+    # NOTE: Canvas may change the format of these fields in the future
+    fields['code'] = course_.code[:7]
+    fields['crn'] = course_.name[-6:-1]
+    fields['semester'] = ' '.join(course_.name.split()[1:3])
+    fields["course_id"] = course_.canvas_id
+
+    # 2. all assignment/quiz ids ("{root_filename}" => canvas_id)
+    # root_filename: w/o parent dirs and extension
+    for cid in canvas_id.find_all_course_components(db, course_.canvas_id):
+        if '/' in cid.filename:
+            filename = cid.filename.split('/')[1].split('.')[0]
+            fields[filename] = cid.canvas_id
+
+    return fields
+
 def get_global_template_fields():
+    '''Produce custom info from template_fields.yaml to be formatted into the
+    markdown of various components (e.g., syllabus, pages, assignment
+    descriptions)'''
     with open("template_fields.yaml") as f:
         return yaml.load(f)
 

@@ -83,7 +83,12 @@ class QuizQuestion(component.Component):
                 f"points_possible={self.points_possible}, "\
                 f"answers_count={len(self.answers)})"
 
-    def md(self):
+    def md(self, db, course_):
+        '''TODO: was originally meant for debugging only, but now I'm using it
+        in other components as the operation used for converting markdown to
+        html in potentially multiple places. QuizQuestion is the only component
+        that needs a custom display for debugging so I need to think through a
+        different approach here.'''
         out = self.question_text
         for answer in self.answers:
             for key in ['answer_html', 'answer_text']:
