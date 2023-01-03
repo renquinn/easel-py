@@ -56,8 +56,11 @@ def get_global_template_fields():
     '''Produce custom info from template_fields.yaml to be formatted into the
     markdown of various components (e.g., syllabus, pages, assignment
     descriptions)'''
-    with open("template_fields.yaml") as f:
-        return yaml.load(f)
+    template_fields_fname = "template_fields.yaml"
+    if os.path.isfile(template_fields_fname):
+        with open(template_fields_fname) as f:
+            return yaml.load(f)
+    return {}
 
 def isurl(url):
     # requires protocol in addition to hostname
