@@ -45,7 +45,9 @@ def pull_all(db, course_, dry_run):
             cid = canvas_id.CanvasID(ag['filename'], course_.canvas_id)
             cid.canvas_id = ag.get('id')
             cid.save(db)
-        ags.append(AssignmentGroup.build(ag))
+        new_ag = AssignmentGroup.build(ag)
+        new_ag.save(db)
+        ags.append(new_ag)
     return ags
 
 # Needed for custom yaml tag
