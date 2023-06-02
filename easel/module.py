@@ -22,7 +22,7 @@ class Module(component.Component):
 
     def __init__(self, name=None, published=None, position=None,
             unlock_at=None, require_sequential_progress=None,
-            prerequisite_module_ids=None, items=None, filename="",
+            prerequisite_module_ids=None, items=[], filename="",
             yaml_order=[]):
         super().__init__(create_path=MODULES_PATH, update_path=MODULE_PATH,
                 db_table=MODULES_TABLE, canvas_wrapper=WRAPPER,
