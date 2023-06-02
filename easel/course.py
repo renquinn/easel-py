@@ -135,7 +135,7 @@ def format_syllabus(db, course_id):
         ---
         '''
         import yaml
-        md_fields = yaml.load(metadata)['custom_fields']
+        md_fields = yaml.load(metadata, Loader=yaml.FullLoader).get('custom_fields', {})
         if course_id in md_fields:
             # TODO: I'm not a fan of this way to organize fields for multiple
             # sections in the yaml (see example format above)

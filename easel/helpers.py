@@ -6,11 +6,11 @@ from pathlib import Path
 import re
 from tqdm import tqdm
 import urllib.parse
-import yaml
 
 import markdown
 import requests
 import tinydb
+import yaml
 
 from easel import canvas_id
 
@@ -59,7 +59,7 @@ def get_global_template_fields():
     template_fields_fname = "template_fields.yaml"
     if os.path.isfile(template_fields_fname):
         with open(template_fields_fname) as f:
-            return yaml.load(f)
+            return yaml.load(f, Loader=yaml.FullLoader)
     return {}
 
 def isurl(url):
