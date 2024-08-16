@@ -27,7 +27,11 @@ def read(filepath):
     if os.path.isdir(filepath):
         return None
     with open(filepath) as f:
-        return yaml.load(f, Loader=yaml.FullLoader)
+        try:
+            return yaml.load(f, Loader=yaml.FullLoader)
+        except Exception as e:
+            print("Error parsing yaml in", filepath)
+            raise e
 
 def write(filepath, obj):
     if os.path.isdir(filepath):
@@ -44,7 +48,7 @@ def write(filepath, obj):
 
 def str_representer(dumper, data):
     '''Writes block strings for multiple lines, regular strings for single lines'''
-    if len(data.splitlines()) > 1:  # check for multiline string
+    if len(data.splitlines()) > 1 or len(data) > 90:  # check for multiline string
         return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
 
