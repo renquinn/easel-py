@@ -89,11 +89,11 @@ class QuizQuestion(component.Component):
         html in potentially multiple places. QuizQuestion is the only component
         that needs a custom display for debugging so I need to think through a
         different approach here.'''
-        out = self.question_text
+        out = helpers.md2html(self.question_text.strip())
         for answer in self.answers:
             for key in ['answer_html', 'answer_text']:
                 if key in answer:
-                    out += "\n- A: " + answer[key]
+                    out += "\n- A: " + helpers.md2html(answer[key].strip())
         return out
 
     def format_create_path(self, db, *path_args):

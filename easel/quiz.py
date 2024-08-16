@@ -174,17 +174,25 @@ class Quiz(component.Component):
             cid.find_id(db)
             self.assignment_group_id = cid.canvas_id
 
-    def md(self, db, course_):
-        if self.description:
-            fields = helpers.get_global_template_fields()
-            course_fields = helpers.get_course_template_fields(db, course_)
-            fields.update(course_fields)
-            return helpers.md2html(self.description.strip())
-        return ''
+    def md(self, db, course_, include_questions=True):
+        if not self.description:
+            return ''
+        fields = helpers.get_global_template_fields()
+        course_fields = helpers.get_course_template_fields(db, course_)
+        fields.update(course_fields)
+        description_text = helpers.md2html(self.description.strip())
+        if include_questions:
+            question_texts = []
+            from easel import quiz_question # import here to prevent circular import
+            for question in self.quiz_questions:
+                question_texts.append(quiz_question.QuizQuestion(**question).md(db, course_))
+            questions_text = '\n\n'.join(question_texts)
+            description_text += f'\n\n{questions_text}'
+        return description_text
 
     def preprocess(self, db, course_, dry_run):
         if self.description:
-            self.description = self.md(db, course_)
+            self.description = self.md(db, course_, False)
         self.get_assignment_group_id(db, course_.canvas_id)
         self.remember_published = self.published
         self.published = False
