@@ -87,7 +87,7 @@ def filter_canvas_html(html):
     return html
 
 def md2html(mdtext, args={}):
-    extensions = ['fenced_code', 'codehilite', 'tables', 'attr_list']
+    extensions = ['fenced_code', 'codehilite', 'tables', 'attr_list', 'md_in_html']
     config = {'codehilite': {'noclasses': True}}
     mdtext = mdtext.format(**args)
     return markdown.markdown(mdtext, extensions=extensions,
