@@ -180,7 +180,7 @@ class Quiz(component.Component):
         fields = helpers.get_global_template_fields()
         course_fields = helpers.get_course_template_fields(db, course_)
         fields.update(course_fields)
-        description_text = helpers.md2html(self.description.strip())
+        description_text = helpers.md2html(self.description.strip(), fields)
         if include_questions:
             question_texts = []
             from easel import quiz_question # import here to prevent circular import
