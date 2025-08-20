@@ -1,5 +1,6 @@
-markdown==3.3.4
-pygments==2.11.2
+markdown
+pygments
+python-dotenv
 pyyaml
 requests
 tinydb

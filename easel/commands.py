@@ -1,3 +1,4 @@
+import getpass
 import importlib
 import logging
 import os.path
@@ -13,6 +14,8 @@ from easel import navigation_tab
 def cmd_login(db, args):
     hostname = args.hostname
     token = args.token
+    if not token:
+        token = getpass.getpass("Enter your API token: ")
 
     protocol = "https://"
     if hostname.startswith(protocol):
