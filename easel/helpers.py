@@ -46,8 +46,12 @@ def get_course_template_fields(db, course_):
     # 2. all assignment/quiz ids ("{root_filename}" => canvas_id)
     # root_filename: w/o parent dirs and extension
     for cid in canvas_id.find_all_course_components(db, course_.canvas_id):
-        if '/' in cid.filename:
-            filename = cid.filename.split('/')[1].split('.')[0]
+        # We need this check to handle linking to uploaded files
+        if cid.filename.startswith('files/'):
+            filename = cid.filename.replace('/', '_').replace('.', '_')
+            fields[filename] = cid.canvas_id
+        elif '/' in cid.filename:
+            filename = cid.filename.split('/')[-1].split('.')[0]
             fields[filename] = cid.canvas_id
 
     return fields
@@ -89,6 +93,14 @@ def filter_canvas_html(html):
 def md2html(mdtext, args={}):
     extensions = ['fenced_code', 'codehilite', 'tables', 'attr_list', 'md_in_html']
     config = {'codehilite': {'noclasses': True}}
+
+    # If markdown has a link to a file in 'files/', replace the slashes and extension dot with underscores
+    if '{files/' in mdtext:
+        for match in re.finditer(r'\{files/[^}]+\}', mdtext):
+            filename = match.group(0)
+            filename = filename.replace('/', '_').replace('.', '_')
+            mdtext = mdtext[:match.start()] + f"{filename}" + mdtext[match.end():]
+
     mdtext = mdtext.format(**args)
     return markdown.markdown(mdtext, extensions=extensions,
             extension_configs=config)
