@@ -1,3 +1,4 @@
+import json
 import logging
 import tinydb
 import yaml
@@ -191,9 +192,15 @@ class Component:
                     self.save(db)
                     cid.canvas_id = resp['url']
                     cid.save(db)
+                elif 'rubric' in resp and 'id' in resp['rubric']:
+                    # rubrics return a special format: {'rubric': {...}, 'rubric_association': {...}}
+                    self.save(db)
+                    cid.canvas_id = resp['rubric']['id']
+                    cid.save(db)
                 elif "message" in resp:
                     logging.error(resp['message'])
                 else:
+                    logging.error(f"Unexpected response when creating component: {json.dumps(resp, indent=2)}")
                     raise ValueError("TODO: handle unexpected response when creating component")
 
             self.postprocess(db, course_, dry_run)
@@ -279,6 +286,7 @@ def build(class_name, dictionary):
     from easel import module_item
     from easel import page
     from easel import quiz
+    from easel import rubric
     components = {
             "Assignment": assignment.Assignment,
             "AssignmentGroup": assignment_group.AssignmentGroup,
@@ -288,6 +296,7 @@ def build(class_name, dictionary):
             "ModuleItem": module_item.ModuleItem,
             "Page": page.Page,
             "Quiz": quiz.Quiz,
+            "Rubric": rubric.Rubric,
             }
     return components[class_name](**dictionary)
 

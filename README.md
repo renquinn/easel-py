@@ -61,6 +61,7 @@ linked documentation.
 - [Navigation Tabs](docs/component_fields/navigation.md)
 - [Pages](docs/component_fields/page.md)
 - [Quizzes](docs/component_fields/quiz.md)
+- [Rubrics](docs/component_fields/rubric.md)
 - [Syllabus](docs/syllabus.md)
 
 ## Command Reference
