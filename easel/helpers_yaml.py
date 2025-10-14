@@ -11,6 +11,7 @@ from easel import navigation_tab
 from easel import page
 from easel import quiz
 from easel import quiz_question
+from easel import rubric
 
 # Define custom yaml tags
 yaml.add_constructor("!Assignment", assignment.constructor)
@@ -22,6 +23,7 @@ yaml.add_constructor("!NavigationTabs", navigation_tab.constructor)
 yaml.add_constructor("!Page", page.constructor)
 yaml.add_constructor("!Quiz", quiz.constructor)
 yaml.add_constructor("!QuizQuestion", quiz_question.constructor)
+yaml.add_constructor("!Rubric", rubric.constructor)
 
 def read(filepath):
     if os.path.isdir(filepath):

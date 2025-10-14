@@ -105,7 +105,7 @@ def cmd_remove(db, args):
     if not args.components:
         # remove everything
         args.components = ["modules", "assignments", "files", "pages",
-                "quizzes", "assignment_groups"]
+                "quizzes", "assignment_groups", "rubrics"]
 
     if not args.course:
         args.course = course.find_all(db)
@@ -149,7 +149,7 @@ def cmd_pull(db, args):
     if not args.components:
         # pull everything
         args.components = ["assignment_groups", "assignments", "files",
-                "pages", "quizzes", "modules"]
+                "pages", "quizzes", "modules", "rubrics"]
 
     if not args.course:
         args.course = course.find_all(db)
@@ -239,7 +239,7 @@ def cmd_push(db, args):
         # push everything
         args.components = ["syllabus.md", "grading_scheme.yaml",
                 "navigation.yaml", "assignment_groups", "assignments", "files",
-                "pages", "quizzes", "modules"]
+                "pages", "quizzes", "modules", "rubrics"]
 
     if not args.course:
         args.course = course.find_all(db)
