@@ -28,7 +28,7 @@ For each of these operations, refer to their detailed description and usage
 below.
 
 1. Tell easel about your Canvas instance (only needs to be run once):
-    `easel login <canvas_base_url> <api_token>`
+    `easel login <canvas_base_url>`
 2. Initialize easel in a course-specific directory: `easel init`
 3. Add a course or courses (i.e., sections):
     `easel course add <canvas_course_url>`

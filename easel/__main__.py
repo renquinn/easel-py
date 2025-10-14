@@ -30,7 +30,7 @@ def main():
     parser_login = subparsers.add_parser("login", help="login to Canvas")
     parser_login.add_argument("hostname", help="the hostname of your Canvas "
             "instance")
-    parser_login.add_argument("token", help="your api token")
+    parser_login.add_argument("--token", help="your api token")
     parser_login.set_defaults(func=commands.cmd_login)
 
     ## init
