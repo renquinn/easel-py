@@ -36,7 +36,7 @@ def test_config_success(mocker):
 
     config_data = {
         "hostname": "my.canvas.com",
-        "access_token": "my_token",
+        "token": "my_token",
         "db_path": "/fake/path/to/db.json"
     }
     mock_file_content = json.dumps(config_data)
@@ -45,7 +45,7 @@ def test_config_success(mocker):
     config = helpers.Config()
 
     assert config.hostname == "my.canvas.com"
-    assert config.access_token == "my_token"
+    assert config.token == "my_token"
     assert config.db_path == "/fake/path/to/db.json"
     assert config.config_file == mock_home / ".easelrc"
 

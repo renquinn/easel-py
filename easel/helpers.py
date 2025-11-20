@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import os.path
+import sys
 from pathlib import Path
 import re
 from tqdm import tqdm
@@ -70,16 +71,18 @@ def isurl(url):
     # requires protocol in addition to hostname
     try:
         parsed = urllib.parse.urlparse(url)
-        return all([parsed.scheme, parsed.netloc])
+        return all([parsed.scheme in ['http', 'https'], parsed.netloc])
     except:
         return False
 
 def make_nested_filename(parent, child):
-    return f"{parent}--{child}"
+    parent_base, _ = os.path.splitext(parent)
+    return f"{parent_base}--{child}"
 
 def filter_canvas_html(html):
     if not html:
         return html
+    html = re.sub(r'<!-- OMITTED \.\.\. -->', '', html)
     linktags = re.findall("<link.*?>", html)
     for lt in linktags:
         if 'canvas_global_app' in lt:
@@ -243,13 +246,21 @@ class Config:
         if home == "":
             raise ValueError("home directory is not set")
 
-        config_file = home / ".easelrc" # https://docs.python.org/3.7/library/pathlib.html#operators
+        self.config_file = home / ".easelrc" # https://docs.python.org/3.7/library/pathlib.html#operators
 
-        f = open(config_file)
-        c = json.loads(f.read())
-        f.close()
+        try:
+            with open(self.config_file) as f:
+                c = json.load(f)
+        except FileNotFoundError:
+            print(f"Config file not found: {self.config_file}", file=sys.stderr)
+            sys.exit(1)
+        except json.JSONDecodeError:
+            print(f"Config file '{self.config_file}' is malformed.", file=sys.stderr)
+            sys.exit(1)
+
         self.hostname = c["hostname"]
         self.token = c["token"]
+        self.db_path = c.get("db_path")
 
     def __repr__(self):
         return f"Config(hostname={self.hostname},  token={self.token})"
