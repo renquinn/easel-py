@@ -57,14 +57,20 @@ def find_all(db):
     return [build(c) for c in db.table(COURSES_TABLE).all()]
 
 def get_id_from_url(course_url):
+    if not isinstance(course_url, str):
+        return None
     try:
         parsed = urllib.parse.urlparse(course_url)
-        path = parsed.path.split("/")
-        courseId = int(path[len(path)-1])
-        return courseId
+        path_parts = parsed.path.strip('/').split('/')
+        if 'courses' in path_parts:
+            courses_index = path_parts.index('courses')
+            if courses_index + 1 < len(path_parts):
+                course_id_str = path_parts[courses_index + 1]
+                if course_id_str.isdigit():
+                    return int(course_id_str)
     except ValueError:
-        print(f"Invalid course url f{course_url}")
-        sys.exit(1)
+        return None
+    return None
 
 def match_courses(db, terms):
     courses = []
