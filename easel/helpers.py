@@ -87,7 +87,7 @@ def filter_canvas_html(html):
     for lt in linktags:
         if 'canvas_global_app' in lt:
             html = html.replace(lt, '')
-    scripttags = re.findall("<script.*?><\/script>", html)
+    scripttags = re.findall(r"<script.*?</script>", html)
     for st in scripttags:
         if 'canvas_global_app' in st:
             html = html.replace(st, '')
